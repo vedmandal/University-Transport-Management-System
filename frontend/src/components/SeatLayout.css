@@ -1,0 +1,88 @@
+/* Bus Cabin Layout */
+.bus-cabin {
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 20px 20px 60px 60px; /* Rounded top like a bus */
+    max-width: 400px;
+    position: relative;
+}
+
+.steering-wheel {
+    font-size: 1.5rem;
+    transform: rotate(-15deg);
+    opacity: 0.5;
+}
+
+/* Seat Grid - 2 seats, Aisle, 2 seats */
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) 40px repeat(2, 1fr); /* The 40px is the aisle */
+    gap: 15px;
+    justify-items: center;
+}
+
+/* Logic to leave the middle column (Aisle) empty */
+.seat-wrapper:nth-child(4n+3) {
+    grid-column-start: 4; /* Skips the 3rd column */
+}
+
+/* Seat Design */
+.seat-btn {
+    width: 45px;
+    height: 50px;
+    border: none;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding-top: 5px;
+}
+
+.seat-top {
+    position: absolute;
+    top: -4px;
+    width: 70%;
+    height: 8px;
+    background: inherit;
+    border-radius: 4px 4px 0 0;
+    filter: brightness(0.9);
+}
+
+.seat-number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.seat-btn.available {
+    background-color: #10b981;
+    color: white;
+    box-shadow: 0 4px 0 #059669;
+}
+
+.seat-btn.available:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+}
+
+.seat-btn.booked {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: 0 4px 0 #cbd5e1;
+}
+
+/* Legend Styling */
+.legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+.legend-box.available { background-color: #10b981; }
+.legend-box.booked { background-color: #e2e8f0; }
+
+.shadow-inner {
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+}

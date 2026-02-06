@@ -1,0 +1,53 @@
+/* Pulse States */
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.pulse-green {
+    background-color: #28a745;
+    box-shadow: 0 0 0 rgba(40, 167, 69, 0.4);
+    animation: pulse-green-anim 2s infinite;
+}
+
+.pulse-orange {
+    background-color: #fd7e14;
+    box-shadow: 0 0 0 rgba(253, 126, 20, 0.4);
+    animation: pulse-orange-anim 2s infinite;
+}
+
+@keyframes pulse-green-anim {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes pulse-orange-anim {
+    0% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(253, 126, 20, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0); }
+}
+
+/* Loading Overlay */
+.map-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 15, 26, 0.2);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.bg-soft-primary {
+    background-color: rgba(108, 92, 231, 0.1);
+}
+
+.map-card {
+    transition: transform 0.3s ease;
+}

@@ -1,0 +1,80 @@
+/* Driver Dashboard Specifics */
+.driver-card {
+    border-radius: 24px;
+    background: #ffffff;
+}
+
+.bus-avatar {
+    width: 70px;
+    height: 70px;
+    background: #f0f3ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+}
+
+/* Big Vibrant Buttons */
+.btn-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-emerald:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    color: white;
+}
+
+.btn-stop-trip {
+    background-color: #fee2e2;
+    color: #ef4444;
+    border: 2px solid #fecaca;
+    border-radius: 15px;
+    transition: all 0.2s ease;
+}
+
+.btn-stop-trip:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Live Status Animation */
+.live-status-card {
+    background: white;
+    border: 2px solid #dcfce7;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.pulse-container {
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.btn-logout-driver {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-logout-driver:hover {
+    background-color: #ef4444; /* Alert Red */
+    border-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.bg-dark-header {
+    background-color: #161625;
+}

@@ -1,0 +1,51 @@
+/* Driver Card Styling */
+.driver-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #f0f0f5 !important;
+}
+
+.driver-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+    border-color: #6c5ce7 !important;
+}
+
+.avatar-circle {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.driver-info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #edf2f7;
+}
+
+.bg-soft-primary {
+    background-color: rgba(108, 92, 231, 0.1);
+}
+
+.tracking-wider {
+    letter-spacing: 1px;
+}
+
+/* Button override for driver page */
+.btn-outline-primary {
+    border-color: #6c5ce7;
+    color: #6c5ce7;
+}
+
+.btn-outline-primary:hover {
+    background-color: #6c5ce7;
+    border-color: #6c5ce7;
+    color: white;
+}

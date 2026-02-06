@@ -1,0 +1,48 @@
+/* Bus List Container */
+.bus-selection-wrapper::-webkit-scrollbar {
+    width: 5px;
+}
+.bus-selection-wrapper::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+/* Individual Card Styling */
+.bus-select-card {
+    cursor: pointer;
+    background-color: #ffffff;
+    border-radius: 12px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-color: #f0f0f5 !important;
+}
+
+.bus-select-card:hover {
+    transform: translateX(5px);
+    border-color: #6c5ce7 !important;
+    background-color: #fcfcff;
+}
+
+/* Active/Selected State - High Contrast Purple */
+.bus-select-card.selected {
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%) !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3) !important;
+}
+
+.bus-icon-mini {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.bg-glass-light {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.route-info-row {
+    transition: background 0.2s ease;
+}

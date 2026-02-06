@@ -1,0 +1,65 @@
+/* Route List Styling */
+.route-item-card {
+    background: #ffffff;
+    padding: 16px 24px;
+    border-radius: 12px;
+    border: 1px solid #f0f0f5;
+    transition: all 0.2s ease;
+}
+
+.route-item-card:hover {
+    border-color: #6c5ce7;
+    background-color: #fcfcff;
+}
+
+.route-icon-box {
+    width: 40px;
+    height: 40px;
+    background: rgba(108, 92, 231, 0.1);
+    color: #6c5ce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.2rem;
+}
+
+/* Subtle Action Buttons */
+.btn-edit-subtle {
+    background: #fff9f0;
+    color: #ff9800;
+    border: 1px solid #ffeeba;
+    font-weight: 600;
+}
+
+.btn-edit-subtle:hover {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-delete-subtle {
+    background: #fff5f5;
+    color: #f44336;
+    border: 1px solid #ffcccc;
+    font-weight: 600;
+}
+
+.btn-delete-subtle:hover {
+    background: #f44336;
+    color: white;
+}
+
+/* Pagination / Counter Badge style */
+.btn-action {
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.btn-action:hover {
+    background: #5a4bcf;
+    color: white;
+    transform: translateY(-2px);
+}

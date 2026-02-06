@@ -1,0 +1,33 @@
+/* Modal Animation */
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Stop Scrollbar Styling */
+  .stops-container::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .stops-container::-webkit-scrollbar-thumb {
+    background: #eee;
+    border-radius: 10px;
+  }
+  
+  /* Modal Input adjustments */
+  .modal-content .custom-input-light {
+      font-size: 0.95rem;
+  }
+  
+  .input-group-text {
+      border-radius: 10px 0 0 10px !important;
+      font-weight: 600;
+  }
+  
+  .modal-content .input-group > .form-control {
+      border-radius: 0 10px 10px 0 !important;
+  }

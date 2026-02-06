@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+:root {
+  --bg-black: #08080a;
+  --bg-slate: #111114;
+  --indigo: #6c5ce7;
+  --emerald: #10b981;
+  --silver: #8e9196;
+}
+
+body {
+  background-color: var(--bg-black);
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  margin: 0;
+}
+
+/* 🚀 NAV & BUTTONS */
+.navbar-custom { background: rgba(8, 8, 10, 0.8); backdrop-filter: blur(10px); z-index: 1000; }
+.nav-logo { font-weight: 900; letter-spacing: -1px; }
+.nav-links a { color: var(--silver); text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+.nav-links a:hover { color: #fff; }
+
+.btn-signin { background: #fff; color: #000 !important; font-weight: 700; padding: 8px 20px; border-radius: 8px; text-decoration: none; }
+
+/* 🏛️ HERO SECTION */
+.hero-section { padding: 180px 0 120px; background: radial-gradient(circle at center, rgba(108, 92, 231, 0.1) 0%, transparent 60%); }
+.main-title { font-size: clamp(3rem, 10vw, 6.5rem); font-weight: 900; letter-spacing: -4px; line-height: 0.85; }
+.glow-text { color: var(--indigo); text-shadow: 0 0 40px rgba(108, 92, 231, 0.4); }
+.hero-subtext { max-width: 600px; font-size: 1.25rem; color: var(--silver); }
+
+.pill-badge { display: inline-block; padding: 6px 16px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.75rem; letter-spacing: 2px; color: var(--silver); }
+
+/* 🛠️ ROLE STYLING */
+.section-padding { padding: 140px 0; }
+.bg-darker { background-color: #0c0c0f; }
+.role-label { font-weight: 900; letter-spacing: 2px; font-size: 0.8rem; display: block; margin-bottom: 1rem; }
+.text-emerald { color: var(--emerald); }
+
+.feature-box { margin-bottom: 30px; }
+.feature-box h5 { font-weight: 700; color: #fff; }
+.feature-box p { color: var(--silver); }
+
+/* 🖼️ UI CARDS */
+.ui-mockup-card { background: var(--bg-slate); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); padding: 25px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+.code-header { display: flex; gap: 6px; margin-bottom: 15px; }
+.code-header span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+.code-content { color: var(--indigo); font-family: monospace; font-size: 0.95rem; }
+
+/* 👨‍✈️ RADAR */
+.radar-container { width: 250px; height: 250px; border: 1px solid var(--emerald); border-radius: 50%; position: relative; margin: 0 auto; overflow: hidden; opacity: 0.6; }
+.radar-beam { width: 50%; height: 50%; background: linear-gradient(90deg, transparent, var(--emerald)); position: absolute; transform-origin: bottom right; animation: sweep 3s linear infinite; }
+@keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* 🎓 BENTO CARDS */
+.bento-card-v2 { background: var(--bg-slate); padding: 60px 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+.bento-card-v2:hover { border-color: var(--indigo); transform: translateY(-10px); }
+.bento-card-v2 i { font-size: 3rem; color: var(--indigo); margin-bottom: 1.5rem; display: block; }
+
+/* 🚀 BUTTONS */
+.btn-indigo-lg { background: var(--indigo); color: white !important; padding: 16px 40px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+.btn-outline-lg { border: 1px solid rgba(255,255,255,0.1); color: white; padding: 16px 40px; border-radius: 12px; font-weight: 700; background: transparent; }
+
+/* 🌑 FOOTER */
+.footer-links a { color: var(--silver); text-decoration: none; transition: 0.3s; font-size: 0.9rem; }
+.footer-links a:hover { color: #fff; padding-left: 5px; }
+
+/* ... Keep previous styles and add these ... */
+
+/* 📊 METRICS BAR */
+.metrics-bar { background: #0a0a0c; }
+.metrics-bar h4 { color: #fff; font-size: 1.8rem; }
+
+/* 🔄 WORKFLOW */
+.mb-100 { margin-bottom: 100px; }
+.workflow-grid { border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
+.workflow-step { padding: 60px 40px; border-right: 1px solid var(--border); background: var(--bg-slate); transition: 0.3s; }
+.workflow-step:last-child { border-right: none; }
+.workflow-step:hover { background: #16161a; }
+.step-number { font-size: 0.8rem; font-weight: 900; color: var(--indigo); margin-bottom: 20px; opacity: 0.6; }
+
+/* 🛠️ FEATURE BOXES */
+.icon-wrap { width: 48px; height: 48px; background: var(--indigo); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.stat-card { background: var(--bg-slate); padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+.stat-card h6 { color: var(--silver); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 5px; }
+.stat-card p { font-size: 1.5rem; font-weight: 800; margin-bottom: 0; color: var(--emerald); }
+
+/* 🌑 STATUS INDICATOR */
+.status-indicator { display: inline-flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); padding: 8px 16px; border-radius: 50px; color: var(--emerald); font-size: 0.8rem; font-weight: 700; }
+.status-dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; box-shadow: 0 0 10px var(--emerald); }
+
+.animate-flicker { animation: flicker 3s infinite; }
+@keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.check-item { margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.check-item i { color: var(--emerald); }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+:root {
+  --bg-deep: #050506;
+  --bg-slate: #0d0d0f;
+  --indigo: #6358dc;
+  --emerald: #10b981;
+  --silver: #8e9196;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background-color: var(--bg-deep);
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* 🚥 TOP BAR & NAV */
+.top-status-bar { background: #000; border-bottom: 1px solid var(--border); font-size: 0.7rem; color: var(--silver); letter-spacing: 1px; padding: 8px 0; }
+.status-dot { width: 6px; height: 6px; background: var(--emerald); border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 8px var(--emerald); }
+.navbar-custom { background: rgba(5, 5, 6, 0.8); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); }
+.btn-signin { background: #fff; color: #000 !important; font-weight: 700; padding: 10px 24px; border-radius: 10px; text-decoration: none; transition: 0.3s; }
+.btn-signin:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
+
+/* 🏛️ HERO SECTION */
+.hero-section {
+  padding: 160px 0;
+  background: radial-gradient(circle at 50% 30%, rgba(99, 88, 220, 0.15) 0%, transparent 60%);
+}
+.main-title { font-size: clamp(3rem, 10vw, 7rem); font-weight: 900; letter-spacing: -4px; line-height: 0.85; }
+.glow-text { color: var(--indigo); text-shadow: 0 0 50px rgba(99, 88, 220, 0.5); }
+.pill-badge { display: inline-block; padding: 6px 18px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); font-size: 0.7rem; color: var(--silver); letter-spacing: 2px; font-weight: 700; }
+
+/* 📉 METRICS & WORKFLOW */
+.metrics-bar { background: #000; }
+.workflow-grid { border: 1px solid var(--border); border-radius: 30px; overflow: hidden; }
+.workflow-step { padding: 60px 40px; border-right: 1px solid var(--border); background: var(--bg-slate); }
+.workflow-step:last-child { border-right: none; }
+.step-number { font-weight: 900; color: var(--indigo); font-size: 0.8rem; margin-bottom: 15px; opacity: 0.5; }
+
+/* 🛠️ CARDS & UI */
+.bg-darker { background-color: #08080a; }
+.code-card { background: #000; border: 1px solid var(--border); border-radius: 20px; padding: 30px; box-shadow: 0 40px 100px rgba(0,0,0,0.6); }
+.code-header { display: flex; gap: 8px; margin-bottom: 20px; }
+.code-header span { width: 10px; height: 10px; border-radius: 50%; background: #222; }
+.feat-icon-box { width: 50px; height: 50px; background: var(--indigo); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+
+/* 👨‍✈️ RADAR */
+.radar-visual { width: 280px; height: 280px; border-radius: 50%; border: 1px solid var(--emerald); position: relative; overflow: hidden; background: rgba(16, 185, 129, 0.05); }
+.radar-line { width: 50%; height: 2px; background: linear-gradient(90deg, transparent, var(--emerald)); position: absolute; top: 50%; left: 50%; transform-origin: left center; animation: rotate 4s linear infinite; }
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* 🎓 BENTO CARDS */
+.bento-card-v3 { background: var(--bg-slate); padding: 50px 40px; border-radius: 30px; border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.bento-card-v3:hover { border-color: var(--indigo); transform: translateY(-15px); background: #121215; }
+.bento-card-v3 i { font-size: 3rem; color: var(--indigo); margin-bottom: 20px; display: block; }
+
+/* 🌑 FOOTER */
+.footer-heading { color: #fff; font-weight: 700; font-size: 0.9rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
+.footer-link-list { list-style: none; padding: 0; }
+.footer-link-list li { margin-bottom: 12px; }
+.footer-link-list a { color: var(--silver); text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+.footer-link-list a:hover { color: #fff; padding-left: 5px; }
+.social-pill { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-slate); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; color: #fff; transition: 0.3s; }
+.social-pill:hover { background: var(--indigo); border-color: var(--indigo); transform: translateY(-3px); }
+.bg-dark-pill { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 50px; }
+
+/* 🎬 REVEAL ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+.reveal.show { opacity: 1; transform: translateY(0); }

@@ -1,0 +1,83 @@
+/* Sidebar Styling */
+.sidebar-admin {
+    background-color: #1c1c2d; /* Slightly lighter than background */
+    min-height: 100vh;
+}
+
+.admin-nav-item {
+    color: #e0e0e0 !important; /* High contrast off-white */
+    font-weight: 600;
+    padding: 12px 15px !important;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.admin-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+}
+
+/* Active Link - Bright Purple */
+.active-link {
+    background-color: #6c5ce7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.4);
+}
+
+/* Content Container */
+.content-area {
+    background-color: #12121f;
+}
+
+.content-card {
+    background-color: #ffffff; /* CONTENT AREA IS NOW WHITE FOR READABILITY */
+    border-radius: 15px;
+    padding: 30px;
+    min-height: 80vh;
+    color: #333333; /* Dark text for the white card */
+}
+
+/* If you want the content card to remain dark but readable, use this instead: */
+/*
+.content-card {
+    background-color: #1c1c2d;
+    color: #ffffff;
+    border: 1px solid #33334d;
+}
+*/
+/* 🚀 High-Visibility Logout Button */
+.btn-logout-danger {
+    background-color: #ff4d4d; /* Bright, vivid red */
+    color: #ffffff !important; /* Pure white text */
+    border: none;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+  }
+  
+  .btn-logout-danger:hover {
+    background-color: #ff3333; /* Slightly darker red on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 77, 77, 0.5);
+    color: #ffffff !important;
+  }
+  
+  /* For the Sidebar version (ghost style but visible) */
+  .sidebar-logout-btn {
+    color: #ff4d4d !important;
+    background: rgba(255, 77, 77, 0.1); /* Light red tint */
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-logout-btn:hover {
+    background: #ff4d4d;
+    color: white !important;
+  }

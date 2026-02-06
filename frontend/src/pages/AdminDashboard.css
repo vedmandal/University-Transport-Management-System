@@ -1,0 +1,57 @@
+/* High-Contrast Form Card */
+.form-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 550px;
+    border: 1px solid #e0e0e0;
+}
+
+.custom-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+/* Light Input Styling for better readability */
+.custom-input-light {
+    background-color: #f8f9fa !important;
+    border: 2px solid #eee !important;
+    border-radius: 10px !important;
+    padding: 12px 15px !important;
+    font-size: 1rem;
+    color: #222 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-input-light:focus {
+    background-color: #fff !important;
+    border-color: #6c5ce7 !important;
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1) !important;
+}
+
+/* Primary Action Button */
+.btn-action {
+    background: #6c5ce7;
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    background: #5a4bcf;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+    color: white;
+}
+
+.btn-action:disabled {
+    background: #a29bfe;
+    cursor: not-allowed;
+}

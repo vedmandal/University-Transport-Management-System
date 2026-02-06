@@ -1,0 +1,50 @@
+/* Table Aesthetics */
+.letter-spacing-1 {
+    letter-spacing: 0.05rem;
+}
+
+.table thead th {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    background: #eef2ff;
+    color: #6c5ce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.bg-success-soft {
+    background-color: #ecfdf5;
+    color: #059669 !important;
+}
+
+.icon-box {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* Print Styles - Hides sidebar when printing */
+@media print {
+    .sidebar-admin, .navbar, .btn-action, .date-input-wrapper {
+        display: none !important;
+    }
+    .col-md-10 {
+        width: 100% !important;
+    }
+    .table-responsive {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}

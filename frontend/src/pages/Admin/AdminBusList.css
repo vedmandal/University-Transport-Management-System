@@ -1,0 +1,66 @@
+/* Bus Card Specifics */
+.bus-card {
+    background: #ffffff;
+    border-radius: 18px;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f5 !important;
+}
+
+.bus-card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-4px);
+}
+
+.bus-icon-circle {
+    width: 50px;
+    height: 50px;
+    background: #f0efff;
+    color: #6c5ce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.4rem;
+}
+
+.route-detail-box {
+    background-color: #f8f9fc;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+}
+
+/* Tracking Button - Vibrant Blue */
+.btn-track-primary {
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.btn-track-primary:hover {
+    background-color: #5a4bcf;
+    color: white;
+}
+
+/* Attendance Button - Soft Dark */
+.btn-attendance-secondary {
+    background-color: #1c1c2d;
+    color: #e0e0e0;
+    border: none;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.btn-attendance-secondary:hover {
+    background-color: #2a2a40;
+    color: white;
+}
+
+.bg-success-soft {
+    background-color: rgba(40, 167, 69, 0.1);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
