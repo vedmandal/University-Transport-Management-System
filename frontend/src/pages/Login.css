@@ -13,7 +13,8 @@ body, .login-wrapper {
     max-width: 1000px;
     height: 650px;
     border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #161626;
 }
 
 .bg-card-dark {
@@ -31,52 +32,74 @@ body, .login-wrapper {
     flex-direction: column;
 }
 
+/* Visibility & Font Fixes */
+.text-white { color: #ffffff !important; }
+
+.custom-text-muted {
+    color: #a0a0c0 !important;
+    font-size: 0.95rem;
+}
+
+.text-secondary-alt {
+    color: #8f8fb1 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Input Styling & Visibility */
+.custom-input {
+    background-color: #1f1f33 !important;
+    border: 1px solid #2e2e4a !important;
+    color: #ffffff !important;
+    padding: 14px 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.custom-input::placeholder {
+    color: #58587a !important;
+    opacity: 1;
+}
+
+.custom-input:focus {
+    border-color: #6c5ce7 !important;
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15) !important;
+    outline: none;
+}
+
+/* Fix for Chrome yellow/white autofill background */
+.custom-input:-webkit-autofill,
+.custom-input:-webkit-autofill:hover, 
+.custom-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0px 1000px #1f1f33 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Buttons */
+.btn-login {
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    border: none;
+    color: white !important;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+    opacity: 0.9;
+}
+
+.color-primary {
+    color: #a29bfe !important;
+}
+
 .bg-glass {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Input Styles */
-.custom-input {
-    background-color: #1f1f33 !important;
-    border: 1px solid #2e2e4a !important;
-    color: white !important;
-    padding: 14px 16px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.custom-input:focus {
-    border-color: #6c5ce7 !important;
-    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15) !important;
-}
-
-.text-secondary-alt {
-    color: #8f8fb1;
-    letter-spacing: 1px;
-}
-
-/* Button & Links */
-.btn-login {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-    border: none;
-    color: white;
-    border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
-    color: white;
-}
-
-.color-primary {
-    color: #a29bfe;
-}
-
-/* Pagination Dots */
 .dot {
     width: 8px;
     height: 8px;

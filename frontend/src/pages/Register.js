@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import "./Login.css"; // Reuse the same CSS for consistency
+import "./Login.css"; // Using the same CSS for visual consistency
 
 export default function Register() {
   const navigate = useNavigate();
@@ -32,17 +32,17 @@ export default function Register() {
   return (
     <div className="login-wrapper d-flex align-items-center justify-content-center">
       <div className="login-container container shadow-lg overflow-hidden">
-        <div className="row h-100">
+        <div className="row h-100 g-0">
           
-          {/* LEFT SIDE: DESIGN & BRANDING (Matching Login) */}
+          {/* LEFT SIDE: DESIGN & BRANDING */}
           <div className="col-md-6 d-none d-md-block p-0 position-relative">
             <div className="image-overlay">
-              <div className="brand-content p-5 text-white">
-                <span className="badge rounded-pill bg-glass mb-3">Join the Network</span>
+              <div className="brand-content p-5 text-white h-100 d-flex flex-column">
+                <span className="badge rounded-pill bg-glass mb-3 align-self-start">Join the Network</span>
                 <h1 className="display-5 fw-bold mb-3">Create <br/>Account.</h1>
                 <p className="lead opacity-75">Get real-time updates and manage your campus commute effortlessly.</p>
                 
-                <div className="mt-auto pt-5">
+                <div className="mt-auto">
                    <div className="d-flex gap-2">
                       <div className="dot"></div>
                       <div className="dot active"></div>
@@ -54,24 +54,22 @@ export default function Register() {
           </div>
 
           {/* RIGHT SIDE: REGISTRATION FORM */}
-          <div className="col-md-6 p-5 d-flex flex-column justify-content-center bg-card-dark overflow-auto" style={{maxHeight: '650px'}}>
+          <div className="col-md-6 p-5 d-flex flex-column justify-content-center bg-card-dark overflow-auto">
             <div className="form-header mb-4">
               <h2 className="fw-bold text-white mb-1">Get Started</h2>
-              <p className="text-muted">Fill in your details to join KRMU Transit</p>
+              <p className="custom-text-muted">Fill in your details to join KRMU Transit</p>
             </div>
 
             <form onSubmit={submit}>
-              <div className="row">
-                <div className="col-md-12 mb-3">
-                  <label className="form-label text-secondary-alt small fw-bold text-uppercase">Full Name</label>
-                  <input
-                    className="form-control custom-input"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
+              <div className="mb-3">
+                <label className="form-label text-secondary-alt small fw-bold text-uppercase">Full Name</label>
+                <input
+                  className="form-control custom-input"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="mb-3">
@@ -79,15 +77,15 @@ export default function Register() {
                 <input
                   type="email"
                   className="form-control custom-input"
-                  placeholder="name@krmangalam.edu.in"
+                  placeholder="name@krmu.edu.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
+              <div className="row mb-4">
+                <div className="col-md-6 mb-3 mb-md-0">
                   <label className="form-label text-secondary-alt small fw-bold text-uppercase">Password</label>
                   <input
                     type="password"
@@ -101,10 +99,9 @@ export default function Register() {
                 <div className="col-md-6">
                   <label className="form-label text-secondary-alt small fw-bold text-uppercase">Role</label>
                   <select
-                    className="form-select custom-input"
+                    className="form-select custom-input select-icon-white"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    style={{ appearance: 'auto' }}
                   >
                     <option value="student">Student</option>
                     <option value="driver">Driver</option>
@@ -115,15 +112,15 @@ export default function Register() {
 
               <button
                 type="submit"
-                className="btn btn-login w-100 py-3 fw-bold mb-3 mt-2"
+                className="btn btn-login w-100 py-3 fw-bold mb-3 d-flex align-items-center justify-content-center"
                 disabled={loading}
               >
-                {loading ? <span className="spinner-border spinner-border-sm"></span> : "Create Account"}
+                {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : "Create Account"}
               </button>
             </form>
 
             <div className="text-center mt-2">
-              <p className="small text-muted">
+              <p className="small custom-text-muted">
                 Already have an account? <Link to="/" className="color-primary text-decoration-none fw-bold">Sign In</Link>
               </p>
             </div>

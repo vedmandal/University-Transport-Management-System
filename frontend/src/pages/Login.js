@@ -20,24 +20,13 @@ export default function Login() {
 
     try {
       const res = await api.post("/auth/login", { email, password });
-      
-      // 1. Log user in via Context (Updates localStorage & Global State)
       login(res.data.token, res.data.role);
-      
       toast.success("Login successful");
 
-      // 2. Role-Based Redirection
-      // We normalize the role to lowercase to avoid string mismatch issues
       const userRole = res.data.role.toLowerCase();
-
-      if (userRole === "student") {
-        navigate("/student");
-      } else if (userRole === "driver") {
-        navigate("/driver");
-      } else if (userRole === "admin") {
-        // Redirecting to the primary admin view
-        navigate("/admin/track"); 
-      }
+      if (userRole === "student") navigate("/student");
+      else if (userRole === "driver") navigate("/driver");
+      else if (userRole === "admin") navigate("/admin/track"); 
       
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid credentials");
@@ -50,7 +39,7 @@ export default function Login() {
   return (
     <div className="login-wrapper d-flex align-items-center justify-content-center">
       <div className="login-container container shadow-lg overflow-hidden">
-        <div className="row h-100">
+        <div className="row h-100 g-0">
           
           {/* LEFT SIDE: DESIGN & BRANDING */}
           <div className="col-md-6 d-none d-md-block p-0 position-relative">
@@ -75,7 +64,7 @@ export default function Login() {
           <div className="col-md-6 p-5 d-flex flex-column justify-content-center bg-card-dark">
             <div className="form-header mb-4">
               <h2 className="fw-bold text-white mb-1">Welcome Back</h2>
-              <p className="text-muted">Enter your credentials to access the portal</p>
+              <p className="custom-text-muted">Enter your credentials to access the portal</p>
             </div>
 
             <form onSubmit={submit}>
@@ -84,7 +73,7 @@ export default function Login() {
                 <input
                   type="email"
                   className="form-control custom-input"
-                  placeholder="name@krmangalam.edu.in"
+                  placeholder="name@krmu.edu.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -114,10 +103,7 @@ export default function Login() {
                 disabled={loading}
               >
                 {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                    Authenticating...
-                  </>
+                  <><span className="spinner-border spinner-border-sm me-2"></span>Authenticating...</>
                 ) : (
                   "Sign In"
                 )}
@@ -125,7 +111,7 @@ export default function Login() {
             </form>
 
             <div className="text-center mt-3">
-              <p className="small text-muted">
+              <p className="small custom-text-muted">
                 New to the system? <Link to="/register" className="color-primary text-decoration-none fw-bold">Create Account</Link>
               </p>
             </div>
