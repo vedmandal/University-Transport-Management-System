@@ -49,11 +49,11 @@ export const socketHandler = (io) => {
       }
     
       // 🔥 SEND LIVE UPDATE TO STUDENTS
-      socket.to(busId).emit("receiveLocation", { lat, lng });
+      io.to(busId).emit("receiveLocation", { lat, lng });
 
 
 // 🔥 send to admins
-socket.to("admins").emit("adminReceiveLocation", {
+io.to("admins").emit("adminReceiveLocation", {
   busId,
   lat,
   lng,
