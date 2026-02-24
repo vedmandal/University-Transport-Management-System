@@ -1,48 +1,113 @@
-/* Bus List Container */
-.bus-selection-wrapper::-webkit-scrollbar {
-    width: 5px;
-}
-.bus-selection-wrapper::-webkit-scrollbar-thumb {
-    background: #e0e0e0;
-    border-radius: 10px;
+.bus-selection-container {
+    padding: 10px;
 }
 
-/* Individual Card Styling */
-.bus-select-card {
+.sidebar-title {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.count-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.bus-list-scroll {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* THE CARD - UNSELECTED (The "Attractive" Slate Look) */
+.bus-premium-card {
+    position: relative;
+    /* Soft Slate-Blue Gradient instead of white */
+    background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 15px;
     cursor: pointer;
-    background-color: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.bus-premium-card:hover {
+    transform: translateY(-4px) translateX(4px);
+    border-color: #6366f1;
+    background: #ffffff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* THE CARD - SELECTED (Vibrant Indigo) */
+.bus-premium-card.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    border-color: transparent;
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+}
+
+/* Bus Plate Internal Box */
+.bus-plate {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 6px 15px;
     border-radius: 12px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-color: #f0f0f5 !important;
+    border: 1px solid #e2e8f0;
 }
 
-.bus-select-card:hover {
-    transform: translateX(5px);
-    border-color: #6c5ce7 !important;
-    background-color: #fcfcff;
+.active .bus-plate {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Active/Selected State - High Contrast Purple */
-.bus-select-card.selected {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%) !important;
-    border-color: transparent !important;
-    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3) !important;
+.plate-label { font-size: 0.6rem; font-weight: 800; color: #94a3b8; }
+.active .plate-label { color: rgba(255, 255, 255, 0.7); }
+
+.plate-number { font-size: 1.1rem; font-weight: 900; color: #1e293b; }
+.active .plate-number { color: white; }
+
+/* Status Indicators */
+.status-indicator { display: flex; align-items: center; gap: 6px; }
+.status-text { font-size: 0.7rem; font-weight: 800; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pulse-green {
+    background: #10b981;
+    animation: shadow-pulse 2s infinite;
 }
 
-.bus-icon-mini {
-    width: 32px;
-    height: 32px;
+@keyframes shadow-pulse {
+    0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0); }
+}
+
+/* Route Info */
+.detail-item {
+    font-size: 0.85rem;
+    color: #64748b;
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-size: 1rem;
+    gap: 8px;
+    font-weight: 500;
 }
+.active .detail-item { color: rgba(255, 255, 255, 0.9); }
 
-.bg-glass-light {
-    background-color: rgba(255, 255, 255, 0.15);
+/* Decorative Icon */
+.card-bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 4rem;
+    color: rgba(0,0,0,0.02);
+    transform: rotate(-15deg);
 }
-
-.route-info-row {
-    transition: background 0.2s ease;
-}
+.active .card-bg-icon { color: rgba(255, 255, 255, 0.1); }

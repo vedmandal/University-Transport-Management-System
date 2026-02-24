@@ -1,27 +1,23 @@
 import api from "../api/axios";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
-import "./SeatLayout.css"; 
+import "./SeatLayout.css";
 
-export default function SeatLayout({ busId, route, totalSeats }) {
+export default function SeatLayout({ busId, route, totalSeats, disabled }) {
   const [bookedSeats, setBookedSeats] = useState([]);
   const [pickupStop, setPickupStop] = useState("");
   const [dropStop, setDropStop] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* 🔄 REFRESH LOGIC 
-     Moved to a separate function so we can call it after a booking failure.
-  */
   const refreshBookedSeats = useCallback(async () => {
     if (!busId) return;
     try {
-      const res = await api.get(`/bookings/get-bus/${busId}`);
-      // Assuming res.data.bookings is an array of objects containing seatNumber
+      const res = await api.get(`/bookings/bus/${busId}`);
       const booked = res.data.bookings.map((b) => b.seatNumber);
       setBookedSeats(booked);
     } catch (err) {
       console.error("Fetch Error:", err);
-      toast.error("Failed to load live seat data");
+      toast.error("Failed to load seat data");
     }
   }, [busId]);
 
@@ -32,9 +28,7 @@ export default function SeatLayout({ busId, route, totalSeats }) {
   }, [busId, refreshBookedSeats]);
 
   const bookSeat = async (seatNumber) => {
-    if (loading) return;
-
-    // Frontend Validations
+    if (loading || disabled) return;
     if (!pickupStop || !dropStop) {
       toast.error("Please select pickup and drop stop");
       return;
@@ -50,26 +44,19 @@ export default function SeatLayout({ busId, route, totalSeats }) {
 
     setLoading(true);
     try {
-      await api.post("/bookings/create-booking", {
+      await api.post("/bookings/create", {
         busId,
         seatNumber,
         pickupStop,
         dropStop,
       });
-
-      toast.success(`Seat ${seatNumber} booked successfully!`);
-      // Optimistically update local state
+      toast.success(`Seat ${seatNumber} request sent to driver`);
       setBookedSeats((prev) => [...prev, seatNumber]);
     } catch (err) {
       const serverMessage = err.response?.data?.message || "Booking failed";
       toast.error(serverMessage);
-
-      /* 🛡️ CONCURRENCY HANDLING
-         If the backend rejected the request because the seat was taken 
-         in the last millisecond, we refresh the map immediately.
-      */
       if (serverMessage.toLowerCase().includes("taken") || serverMessage.toLowerCase().includes("booked")) {
-        refreshBookedSeats(); 
+        refreshBookedSeats();
       }
     } finally {
       setLoading(false);
@@ -77,55 +64,46 @@ export default function SeatLayout({ busId, route, totalSeats }) {
   };
 
   if (!busId) return null;
+  if (disabled) return <div className="alert alert-info shadow-sm rounded-3">You already have an active booking for this trip.</div>;
 
   return (
-    <div className="seat-booking-container p-4 bg-white rounded-4 shadow-sm">
+    <div className="seat-booking-container p-4 bg-white rounded-4 shadow-sm mx-auto" style={{ maxWidth: '450px' }}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h5 className="fw-bold text-dark m-0">Select Your Seat</h5>
-        <button 
-          className="btn btn-sm btn-outline-primary" 
-          onClick={refreshBookedSeats}
-          title="Refresh availability"
-        >
-          <i className="bi bi-arrow-clockwise"></i> Refresh
+        <button className="btn btn-refresh-premium" onClick={refreshBookedSeats}>
+          Refresh Map
         </button>
       </div>
 
-      {/* 🚏 STOP SELECTION */}
-      <div className="row mb-5">
-        <div className="col-md-6 mb-3">
-          <label className="custom-label">Pickup Point</label>
-          <select
-            className="form-select custom-input-light"
-            value={pickupStop}
-            onChange={(e) => setPickupStop(e.target.value)}
-          >
-            <option value="">Where from?</option>
-            {route?.stops?.map((stop) => (
-              <option key={stop._id} value={stop.name}>{stop.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="col-md-6 mb-3">
-          <label className="custom-label">Drop Point</label>
-          <select
-            className="form-select custom-input-light"
-            value={dropStop}
-            onChange={(e) => setDropStop(e.target.value)}
-          >
-            <option value="">Where to?</option>
-            {route?.stops?.map((stop) => (
-              <option key={stop._id} value={stop.name}>{stop.name}</option>
-            ))}
-          </select>
+      {/* STOP SELECTION - MODERN UI */}
+      <div className="stop-selection-card mb-4">
+        <div className="row g-3">
+          <div className="col-6">
+            <div className="custom-input-group">
+              <label className="input-label">📍 Pickup</label>
+              <select className="premium-select" value={pickupStop} onChange={(e) => setPickupStop(e.target.value)}>
+                <option value="">Boarding...</option>
+                {route?.stops?.map((stop) => <option key={stop._id} value={stop.name}>{stop.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="col-6">
+            <div className="custom-input-group">
+              <label className="input-label">🏁 Drop</label>
+              <select className="premium-select" value={dropStop} onChange={(e) => setDropStop(e.target.value)}>
+                <option value="">Destination...</option>
+                {route?.stops?.map((stop) => <option key={stop._id} value={stop.name}>{stop.name}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 🚌 BUS CABIN STRUCTURE */}
-      <div className="bus-cabin p-4 mx-auto shadow-inner">
-        <div className="driver-cabin d-flex justify-content-end mb-4 border-bottom pb-2">
-           <div className="steering-wheel"><i className="bi bi-gear-wide-connected text-muted"></i></div>
+      {/* BUS CABIN STRUCTURE */}
+      <div className="bus-cabin p-4 shadow-inner">
+        <div className="d-flex justify-content-between align-items-center mb-5 px-2">
+          <div className="steering-wheel">☸️</div>
+          <div className="entry-label">ENTRY</div>
         </div>
 
         <div className="seat-grid">
@@ -139,9 +117,8 @@ export default function SeatLayout({ busId, route, totalSeats }) {
                   className={`seat-btn ${isBooked ? "booked" : "available"}`}
                   disabled={isBooked || loading}
                   onClick={() => bookSeat(seatNo)}
-                  style={{ cursor: isBooked ? "not-allowed" : "pointer" }}
                 >
-                  <span className="seat-top"></span>
+                  <div className="seat-top"></div>
                   <span className="seat-number">{seatNo}</span>
                 </button>
               </div>
@@ -150,15 +127,15 @@ export default function SeatLayout({ busId, route, totalSeats }) {
         </div>
       </div>
 
-      {/* ℹ️ LEGEND & STATUS */}
-      <div className="d-flex justify-content-center gap-4 mt-5 pt-3 border-top">
+      {/* LEGEND */}
+      <div className="d-flex justify-content-center gap-4 mt-4 py-2 border-top">
         <div className="d-flex align-items-center gap-2">
           <div className="legend-box available"></div>
-          <span className="small fw-bold text-muted">Available</span>
+          <small className="fw-bold text-muted">Available</small>
         </div>
         <div className="d-flex align-items-center gap-2">
           <div className="legend-box booked"></div>
-          <span className="small fw-bold text-muted">Booked</span>
+          <small className="fw-bold text-muted">Booked</small>
         </div>
       </div>
     </div>

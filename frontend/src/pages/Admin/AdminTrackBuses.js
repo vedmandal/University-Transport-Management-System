@@ -5,8 +5,9 @@ import api from "../../api/axios";
 import { socket } from "../../socket";
 import "./AdminTrackBuses.css";
 
+// Premium Bus Icon
 const busIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/3448/3448339.png", // More modern bus icon
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/3448/3448339.png", 
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -35],
@@ -21,12 +22,14 @@ export default function AdminTrackBuses() {
         const res = await api.get("/bus/all-locations");
         const map = {};
         res.data.buses.forEach((bus) => {
-          map[bus._id] = {
-            lat: bus.lastLocation.lat,
-            lng: bus.lastLocation.lng,
-            busNo: bus.busNo,
-            updatedAt: new Date().toLocaleTimeString(),
-          };
+          if (bus.lastLocation) {
+            map[bus._id] = {
+              lat: bus.lastLocation.lat,
+              lng: bus.lastLocation.lng,
+              busNo: bus.busNo,
+              updatedAt: new Date().toLocaleTimeString(),
+            };
+          }
         });
         setBusLocations(map);
       } catch (err) {
@@ -53,31 +56,32 @@ export default function AdminTrackBuses() {
   }, []);
 
   return (
-    <div className="container-fluid p-0">
-      <div className="row g-0 overflow-hidden" style={{ borderRadius: "20px", border: "1px solid #e0e0e5" }}>
+    <div className="adm-page-content p-0">
+      <div className="adm-fleet-layout shadow-sm">
         
         {/* 🗺️ MAP SECTION */}
-        <div className="col-md-9 position-relative">
-          <div className="map-overlay-badge">
-             <span className="dot pulse me-2"></span> Live Fleet View
+        <div className="adm-map-container">
+          <div className="adm-map-overlay">
+             <span className="adm-pulse-dot"></span> 
+             <span className="adm-live-label">Fleet Live View</span>
           </div>
           <MapContainer
-            center={[28.3188, 77.0608]} // Set this to KR Mangalam University coords
+            center={[28.3188, 77.0608]} 
             zoom={13}
-            style={{ height: "700px", width: "100%" }}
-            className="admin-map"
+            style={{ height: "100%", width: "100%" }}
+            className="adm-leaflet-map"
           >
             <TileLayer 
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" // Cleaner, more modern tile set
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
+              attribution='&copy; CARTO'
             />
 
             {Object.entries(busLocations).map(([busId, loc]) => (
               <Marker key={busId} position={[loc.lat, loc.lng]} icon={busIcon}>
                 <Popup>
-                  <div className="p-1">
-                    <strong className="text-primary d-block">Bus: {loc.busNo}</strong>
-                    <small className="text-muted">Last update: {loc.updatedAt}</small>
+                  <div className="adm-popup-content">
+                    <strong className="adm-popup-bus">Bus: {loc.busNo}</strong>
+                    <span className="adm-popup-time">Active: {loc.updatedAt}</span>
                   </div>
                 </Popup>
               </Marker>
@@ -86,23 +90,30 @@ export default function AdminTrackBuses() {
         </div>
 
         {/* 📊 LIVE STATUS SIDEBAR */}
-        <div className="col-md-3 bg-white border-start overflow-auto" style={{ height: "700px" }}>
-          <div className="p-3 bg-light border-bottom sticky-top">
-            <h6 className="fw-bold mb-0 text-dark">Active Fleet</h6>
-            <small className="text-muted">{Object.keys(busLocations).length} buses currently online</small>
+        <div className="adm-fleet-sidebar">
+          <div className="adm-sidebar-header">
+            <h6 className="adm-sidebar-title">Active Fleet</h6>
+            <div className="adm-online-pill">
+                {Object.keys(busLocations).length} ONLINE
+            </div>
           </div>
-          <div className="list-group list-group-flush">
-            {Object.entries(busLocations).map(([id, bus]) => (
-              <div key={id} className="list-group-item p-3 border-bottom-0 border-start border-4 border-success mb-1">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-bold text-dark">{bus.busNo}</span>
-                  <span className="badge bg-soft-success text-success">Live</span>
-                </div>
-                <div className="text-muted mt-1" style={{ fontSize: "11px" }}>
-                   <i className="bi bi-clock me-1"></i> Updated {bus.updatedAt}
-                </div>
-              </div>
-            ))}
+          
+          <div className="adm-sidebar-scroll">
+            {Object.keys(busLocations).length === 0 ? (
+                <div className="adm-empty-fleet">No buses currently broadcasting.</div>
+            ) : (
+                Object.entries(busLocations).map(([id, bus]) => (
+                  <div key={id} className="adm-fleet-item">
+                    <div className="adm-fleet-meta">
+                      <span className="adm-fleet-no">{bus.busNo}</span>
+                      <span className="adm-live-tag">LIVE</span>
+                    </div>
+                    <div className="adm-fleet-time">
+                       🕒 Updated at {bus.updatedAt}
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </div>
 

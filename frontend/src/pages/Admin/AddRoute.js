@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
 import RouteFormModal from "./RouteFormModal";
-import "./AddRoute.css"; // Ensure this is imported
+import "./AddRoute.css"; 
 
 export default function RoutesPage() {
   const [routes, setRoutes] = useState([]);
@@ -11,8 +11,12 @@ export default function RoutesPage() {
   const [loading, setLoading] = useState(false);
 
   const loadRoutes = async () => {
-    const res = await api.get("/routes/get-route");
-    setRoutes(res.data.allRoutes);
+    try {
+      const res = await api.get("/routes/get-route");
+      setRoutes(res.data.allRoutes);
+    } catch {
+      toast.error("Failed to load routes");
+    }
   };
 
   useEffect(() => {
@@ -57,58 +61,57 @@ export default function RoutesPage() {
   };
 
   return (
-    <div className="container-fluid py-2">
+    <div className="adm-page-content">
       {/* HEADER SECTION */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="adm-header-flex mb-4">
         <div>
-          <h4 className="fw-bold text-dark mb-1">Transit Routes</h4>
-          <p className="text-muted small">Manage university bus paths and stops</p>
+          <h4 className="adm-section-title">Transit Routes</h4>
+          <p className="adm-section-subtitle">Manage university bus paths and stops</p>
         </div>
         <button
-          className="btn btn-action px-4 fw-bold shadow-sm"
+          className="adm-btn-primary px-4 fw-bold"
           onClick={() => {
             setEditRoute(null);
             setShowModal(true);
           }}
         >
-          <i className="bi bi-plus-lg me-2"></i>Add Route
+          ➕ ADD NEW ROUTE
         </button>
       </div>
 
       {/* ROUTES LIST */}
-      <div className="row">
+      <div className="adm-routes-wrapper">
         {routes.length === 0 ? (
-          <div className="col-12 text-center py-5">
+          <div className="adm-empty-state text-center py-5">
+             <span className="adm-empty-icon">🛣️</span>
              <p className="text-muted">No routes available. Click "+ Add Route" to start.</p>
           </div>
         ) : (
           routes.map((route) => (
-            <div key={route._id} className="col-12 mb-3">
-              <div className="route-item-card d-flex justify-content-between align-items-center shadow-sm">
-                <div className="d-flex align-items-center">
-                  <div className="route-icon-box me-3">
-                    <i className="bi bi-signpost-2"></i>
-                  </div>
-                  <div>
-                    <h6 className="fw-bold text-dark mb-0">{route.routeName}</h6>
-                    <span className="text-muted small">ID: {route._id.substring(0, 8)}...</span>
-                  </div>
+            <div key={route._id} className="adm-route-strip animate-fadeIn">
+              <div className="adm-route-main">
+                <div className="adm-route-icon-box">
+                  📍
                 </div>
-                
-                <div className="action-buttons">
-                  <button
-                    className="btn btn-sm btn-edit-subtle me-2"
-                    onClick={() => openEdit(route)}
-                  >
-                    <i className="bi bi-pencil-square me-1"></i> Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-delete-subtle"
-                    onClick={() => deleteRoute(route._id)}
-                  >
-                    <i className="bi bi-trash3 me-1"></i> Delete
-                  </button>
+                <div className="adm-route-info">
+                  <h6 className="adm-route-name">{route.routeName}</h6>
+                  <span className="adm-route-id">UUID: {route._id.substring(0, 8)}...</span>
                 </div>
+              </div>
+              
+              <div className="adm-route-actions">
+                <button
+                  className="adm-btn-subtle-edit me-2"
+                  onClick={() => openEdit(route)}
+                >
+                  EDIT
+                </button>
+                <button
+                  className="adm-btn-subtle-delete"
+                  onClick={() => deleteRoute(route._id)}
+                >
+                  DELETE
+                </button>
               </div>
             </div>
           ))

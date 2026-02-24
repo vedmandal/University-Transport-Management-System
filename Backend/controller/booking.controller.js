@@ -1,7 +1,7 @@
 import bookingModel from "../models/booking.model.js";
 
 /* ======================================================
-   BOOK SEAT
+   BOOK SEAT (Student)
 ====================================================== */
 export const bookSeat = async (req, res) => {
   try {
@@ -15,18 +15,18 @@ export const bookSeat = async (req, res) => {
       });
     }
 
-    /* 🔥 TODAY (normalized) */
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    /* 🔒 CHECK 1: seat already booked today */
+    /* 🔒 Check if seat already booked today */
     const seatBooked = await bookingModel.findOne({
       busId,
       seatNumber,
       date: { $gte: today, $lt: tomorrow },
+      status: { $in: ["pending", "approved"] }
     });
 
     if (seatBooked) {
@@ -36,40 +36,33 @@ export const bookSeat = async (req, res) => {
       });
     }
 
-    /* 🔒 CREATE BOOKING
-       - date handled by model (pre-save hook)
-       - student double booking handled by unique index
-    */
     const booking = await bookingModel.create({
       studentId,
       busId,
       seatNumber,
       pickupStop,
       dropStop,
-      date: today
+      date: today,
+      status: "pending",
+      attendance: "not_marked",
+      finalized: false
     });
 
     return res.status(201).send({
       success: true,
-      message: "Seat booked successfully",
+      message: "Seat booking request sent to driver",
       booking,
     });
+
   } catch (error) {
     console.error("BOOKING ERROR:", error);
 
-    /* 🔥 UNIQUE INDEX VIOLATION
-       studentId + busId + date
-    */
-       if (error.code === 11000) {
-        const isSeatTaken = error.message.includes("seatNumber");
-        
-        return res.status(400).send({
-          success: false,
-          message: isSeatTaken 
-            ? "Oops! Someone just grabbed that seat a second ago. Try another!" 
-            : "You have already booked a seat on this bus today.",
-        });
-      }
+    if (error.code === 11000) {
+      return res.status(400).send({
+        success: false,
+        message: "You have already booked a seat today.",
+      });
+    }
 
     return res.status(500).send({
       success: false,
@@ -79,7 +72,7 @@ export const bookSeat = async (req, res) => {
 };
 
 /* ======================================================
-   GET BOOKED SEATS (FOR SEAT LAYOUT – TODAY ONLY)
+   GET BOOKED SEATS (Seat Layout – Today Only)
 ====================================================== */
 export const getBookedSeats = async (req, res) => {
   try {
@@ -94,13 +87,14 @@ export const getBookedSeats = async (req, res) => {
     const bookings = await bookingModel.find({
       busId,
       date: { $gte: today, $lt: tomorrow },
+      status: { $in: ["pending", "approved"] }
     });
 
     return res.status(200).send({
       success: true,
-      message: "Booked seats fetched successfully",
       bookings,
     });
+
   } catch (error) {
     console.error("GET BOOKED SEATS ERROR:", error);
     return res.status(500).send({
@@ -111,7 +105,159 @@ export const getBookedSeats = async (req, res) => {
 };
 
 /* ======================================================
-   BUS ATTENDANCE (DATE-WISE)
+   DRIVER – GET TODAY BOOKINGS
+====================================================== */
+export const getDriverBookings = async (req, res) => {
+  try {
+    const { busId } = req.params;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const bookings = await bookingModel
+      .find({
+        busId,
+        date: { $gte: today, $lt: tomorrow },
+        finalized: false
+      })
+      .populate("studentId", "name email");
+
+    return res.status(200).send({
+      success: true,
+      bookings,
+    });
+
+  } catch (error) {
+    console.error("DRIVER BOOKINGS ERROR:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to fetch bookings",
+    });
+  }
+};
+
+/* ======================================================
+   DRIVER – APPROVE / REJECT BOOKING
+====================================================== */
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const booking = await bookingModel.findById(id);
+
+    if (!booking) {
+      return res.status(404).send({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    if (booking.finalized) {
+      return res.status(400).send({
+        success: false,
+        message: "Already finalized",
+      });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    return res.status(200).send({
+      success: true,
+      message: "Booking status updated",
+    });
+
+  } catch (error) {
+    console.error("STATUS UPDATE ERROR:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to update status",
+    });
+  }
+};
+
+/* ======================================================
+   DRIVER – MARK ATTENDANCE
+====================================================== */
+export const markAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { attendance } = req.body;
+
+    const booking = await bookingModel.findById(id);
+
+    if (!booking) {
+      return res.status(404).send({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    if (booking.finalized) {
+      return res.status(400).send({
+        success: false,
+        message: "Attendance already finalized",
+      });
+    }
+
+    booking.attendance = attendance;
+    await booking.save();
+
+    return res.status(200).send({
+      success: true,
+      message: "Attendance marked successfully",
+    });
+
+  } catch (error) {
+    console.error("ATTENDANCE ERROR:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to mark attendance",
+    });
+  }
+};
+
+/* ======================================================
+   DRIVER – SUBMIT FINAL ATTENDANCE
+====================================================== */
+export const submitFinalAttendance = async (req, res) => {
+  try {
+    const { busId } = req.params;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    await bookingModel.updateMany(
+      {
+        busId,
+        date: { $gte: today, $lt: tomorrow }
+      },
+      { finalized: true }
+    );
+
+    return res.status(200).send({
+      success: true,
+      message: "Attendance submitted to admin successfully",
+    });
+
+  } catch (error) {
+    console.error("FINAL SUBMIT ERROR:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to submit attendance",
+    });
+  }
+};
+
+/* ======================================================
+   ADMIN – GET FINALIZED ATTENDANCE
 ====================================================== */
 export const getBusAttendance = async (req, res) => {
   try {
@@ -128,6 +274,7 @@ export const getBusAttendance = async (req, res) => {
       .find({
         busId,
         date: { $gte: selectedDate, $lt: nextDay },
+        finalized: true
       })
       .populate("studentId", "name email");
 
@@ -136,11 +283,95 @@ export const getBusAttendance = async (req, res) => {
       count: bookings.length,
       attendance: bookings,
     });
+
   } catch (error) {
-    console.error("ATTENDANCE ERROR:", error);
+    console.error("ADMIN ATTENDANCE ERROR:", error);
     return res.status(500).send({
       success: false,
       message: "Failed to fetch attendance",
+    });
+  }
+};
+
+
+export const getMyBooking = async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const studentId = req.user.id;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const booking = await bookingModel.findOne({
+      studentId,
+      busId,
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    res.status(200).send({
+      success: true,
+      booking
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch booking"
+    });
+  }
+};
+
+
+export const driverAddStudent = async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const { studentId, seatNumber, pickupStop, dropStop } = req.body;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Check if seat already used
+    const seatTaken = await bookingModel.findOne({
+      busId,
+      seatNumber,
+      date: { $gte: today, $lt: tomorrow },
+      status: { $in: ["pending", "approved"] }
+    });
+
+    if (seatTaken) {
+      return res.status(400).send({
+        success: false,
+        message: "Seat already taken"
+      });
+    }
+
+    const booking = await bookingModel.create({
+      studentId,
+      busId,
+      seatNumber,
+      pickupStop,
+      dropStop,
+      date: today,
+      status: "approved",          // auto-approved
+      attendance: "present",       // default present
+      finalized: false
+    });
+
+    res.status(201).send({
+      success: true,
+      booking
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Failed to add student"
     });
   }
 };

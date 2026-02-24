@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
-import "./AddDriver.css"; // Reuse your admin styles
+import "./AddDriver.css"; 
 
 export default function DriversPage() {
   const [drivers, setDrivers] = useState([]);
@@ -24,67 +24,65 @@ export default function DriversPage() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center mt-5">
+      <div className="adm-loader-container">
         <div className="spinner-border text-primary" role="status"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-2">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="adm-page-content">
+      {/* HEADER SECTION */}
+      <div className="adm-header-flex mb-4">
         <div>
-          <h4 className="fw-bold text-dark mb-1">Registered Drivers</h4>
-          <p className="text-muted small">Overview of all active drivers in the system</p>
+          <h4 className="adm-section-title">Registered Drivers</h4>
+          <p className="adm-section-subtitle">Overview of all active drivers in the system</p>
         </div>
-        <span className="badge bg-soft-primary text-primary px-3 py-2">
+        <div className="adm-count-pill">
           Total: {drivers.length}
-        </span>
+        </div>
       </div>
 
-      <div className="row">
-        {drivers.length === 0 && (
+      <div className="row g-4">
+        {drivers.length === 0 ? (
           <div className="col-12 text-center py-5">
-            <p className="text-muted">No drivers found in the database.</p>
+            <div className="adm-empty-state">
+              <span className="adm-empty-icon">📭</span>
+              <p className="text-muted">No drivers found in the database.</p>
+            </div>
           </div>
-        )}
-
-        {drivers.map((driver) => (
-          <div key={driver._id} className="col-md-6 col-lg-4 mb-4">
-            <div className="card driver-card border-0 shadow-sm h-100">
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center mb-3">
-                  <div className="avatar-circle me-3">
+        ) : (
+          drivers.map((driver) => (
+            <div key={driver._id} className="col-md-6 col-lg-4">
+              <div className="adm-driver-card shadow-sm animate-fadeIn">
+                <div className="adm-card-top">
+                  <div className="adm-avatar-circle">
                     {driver.name.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h5 className="card-title fw-bold text-dark mb-0">
-                      {driver.name}
-                    </h5>
-                    <span className="text-primary small fw-semibold text-uppercase tracking-wider" style={{fontSize: '10px'}}>
-                      Verified Driver
-                    </span>
+                  <div className="adm-name-meta">
+                    <h5 className="adm-driver-name">{driver.name}</h5>
+                    <span className="adm-verified-badge">VERIFIED DRIVER</span>
                   </div>
                 </div>
 
-                <div className="driver-info-box p-3 rounded-3 mb-3">
-                  <div className="d-flex align-items-center mb-2">
-                    <i className="bi bi-envelope text-muted me-2"></i>
-                    <span className="text-dark small text-truncate">{driver.email}</span>
+                <div className="adm-driver-details-box">
+                  <div className="adm-detail-row">
+                    <span className="adm-detail-icon">📧</span>
+                    <span className="adm-detail-text">{driver.email}</span>
                   </div>
-                  <div className="d-flex align-items-center">
-                    <i className="bi bi-shield-check text-muted me-2"></i>
-                    <span className="text-muted small">Status: Active</span>
+                  <div className="adm-detail-row">
+                    <span className="adm-detail-icon">🛡️</span>
+                    <span className="adm-detail-text">Status: <strong className="text-success">Active</strong></span>
                   </div>
                 </div>
 
-                <button className="btn btn-outline-primary btn-sm w-100 rounded-2 py-2">
-                  View Profile
+                <button className="adm-btn-profile">
+                  VIEW PROFILE
                 </button>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./RouteFormModal.css"
+import "./RouteFormModal.css";
 
 export default function RouteFormModal({
   show,
@@ -19,7 +19,7 @@ export default function RouteFormModal({
       setRouteName("");
       setStops([""]);
     }
-  }, [initialData, show]); // Added 'show' to dependency to reset when opened
+  }, [initialData, show]);
 
   const addStop = () => setStops([...stops, ""]);
 
@@ -47,92 +47,87 @@ export default function RouteFormModal({
 
   return (
     <>
-      {/* Custom Backdrop for high contrast */}
-      <div className="modal-backdrop fade show" style={{ backgroundColor: 'rgba(15, 15, 26, 0.8)', backdropFilter: 'blur(4px)' }}></div>
+      {/* Premium Blur Backdrop */}
+      <div className="adm-modal-overlay" onClick={onClose}></div>
       
-      <div className="modal show d-block animate-fadeIn" tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered modal-md">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden' }}>
-            <div className="modal-header bg-light border-0 py-3 px-4">
-              <h5 className="modal-title fw-bold text-dark">
+      <div className="adm-modal-wrapper">
+        <div className="adm-modal-content animate-fadeIn">
+          <div className="adm-modal-header">
+            <div>
+              <h5 className="adm-modal-title">
                 {initialData ? "✏️ Edit Route" : "🛣️ Create New Route"}
               </h5>
-              <button className="btn-close" onClick={onClose} aria-label="Close" />
+              <p className="adm-modal-subtitle">Define paths and pickup points</p>
             </div>
+            <button className="adm-close-x" onClick={onClose}>&times;</button>
+          </div>
 
-            <form onSubmit={submit}>
-              <div className="modal-body p-4">
-                <div className="mb-4">
-                  <label className="custom-label mb-2">Route Title</label>
-                  <input
-                    className="form-control custom-input-light"
-                    placeholder="e.g., Campus Express - North"
-                    value={routeName}
-                    onChange={(e) => setRouteName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="mb-2 d-flex justify-content-between align-items-center">
-                  <label className="custom-label">Route Stops</label>
-                  <button
-                    type="button"
-                    className="btn btn-link text-primary text-decoration-none fw-bold p-0 small"
-                    onClick={addStop}
-                  >
-                    + Add Stop
-                  </button>
-                </div>
-
-                <div className="stops-container pe-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {stops.map((stop, i) => (
-                    <div key={i} className="input-group mb-2">
-                      <span className="input-group-text border-0 bg-light text-muted small px-2">
-                        {i + 1}
-                      </span>
-                      <input
-                        className="form-control custom-input-light"
-                        placeholder={`Name of stop ${i + 1}`}
-                        value={stop}
-                        onChange={(e) => updateStop(i, e.target.value)}
-                        required
-                      />
-                      {stops.length > 1 && (
-                        <button 
-                          type="button" 
-                          className="btn btn-outline-danger border-0" 
-                          onClick={() => removeStop(i)}
-                        >
-                          <i className="bi bi-x-circle"></i>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          <form onSubmit={submit}>
+            <div className="adm-modal-body">
+              <div className="adm-form-group mb-4">
+                <label className="adm-label">Route Title</label>
+                <input
+                  className="adm-input"
+                  placeholder="e.g., Campus Express - North"
+                  value={routeName}
+                  onChange={(e) => setRouteName(e.target.value)}
+                  required
+                />
               </div>
 
-              <div className="modal-footer border-0 p-4 pt-0">
+              <div className="adm-stops-header mb-2">
+                <label className="adm-label mb-0">Route Stops</label>
                 <button
                   type="button"
-                  className="btn btn-light px-4 fw-semibold"
-                  onClick={onClose}
-                  style={{ borderRadius: '10px' }}
+                  className="adm-btn-add-stop"
+                  onClick={addStop}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-action px-5 fw-bold"
-                  disabled={loading}
-                  style={{ borderRadius: '10px' }}
-                >
-                  {loading ? (
-                    <><span className="spinner-border spinner-border-sm me-2"></span>Saving...</>
-                  ) : "Save Route"}
+                  + Add Stop
                 </button>
               </div>
-            </form>
-          </div>
+
+              <div className="adm-stops-scroll">
+                {stops.map((stop, i) => (
+                  <div key={i} className="adm-stop-input-row">
+                    <div className="adm-stop-number">{i + 1}</div>
+                    <input
+                      className="adm-input adm-input-stop"
+                      placeholder={`Stop name`}
+                      value={stop}
+                      onChange={(e) => updateStop(i, e.target.value)}
+                      required
+                    />
+                    {stops.length > 1 && (
+                      <button 
+                        type="button" 
+                        className="adm-btn-remove" 
+                        onClick={() => removeStop(i)}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="adm-modal-footer">
+              <button
+                type="button"
+                className="adm-btn-cancel"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="adm-btn-save"
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Save Route"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </>

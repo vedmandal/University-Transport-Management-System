@@ -99,3 +99,26 @@ export const getAllDrivers = async (req, res) => {
     }
   };
 
+  export const searchStudents = async (req, res) => {
+    try {
+      const { query } = req.query;
+  
+      if (!query) {
+        return res.json({ students: [] });
+      }
+  
+      const students = await userModel.find({
+        role: "student",
+        name: { $regex: query, $options: "i" }  // case insensitive
+      })
+      .select("name email")
+      .limit(10);
+  
+      res.json({ students });
+  
+    } catch (err) {
+      res.status(500).json({ message: "Search failed" });
+    }
+  };
+
+  

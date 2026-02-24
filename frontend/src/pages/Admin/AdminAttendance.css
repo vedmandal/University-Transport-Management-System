@@ -1,50 +1,134 @@
-/* Table Aesthetics */
-.letter-spacing-1 {
-    letter-spacing: 0.05rem;
-}
-
-.table thead th {
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.avatar-sm {
-    width: 32px;
-    height: 32px;
-    background: #eef2ff;
-    color: #6c5ce7;
+/* ATTENDANCE REPORT STYLES */
+.adm-header-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.8rem;
+    gap: 12px;
 }
 
-.bg-success-soft {
-    background-color: #ecfdf5;
-    color: #059669 !important;
-}
-
-.icon-box {
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.adm-date-picker {
+    border: 2px solid #f1f5f9;
     border-radius: 12px;
+    padding: 8px 15px;
+    font-weight: 700;
+    color: #1e293b;
+    outline: none;
+    transition: 0.2s;
 }
 
-/* Print Styles - Hides sidebar when printing */
+.adm-date-picker:focus {
+    border-color: #6366f1;
+}
+
+.adm-btn-print {
+    background: white;
+    color: #1e293b;
+    border: 2px solid #e2e8f0;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.adm-btn-print:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* SUMMARY CARDS */
+.adm-summary-card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.adm-summary-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.5px;
+}
+
+.adm-summary-value {
+    font-weight: 900;
+    margin: 10px 0;
+    color: #1e293b;
+}
+
+.adm-progress-bg {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.adm-progress-bar {
+    height: 100%;
+    transition: width 1s ease-in-out;
+}
+
+/* TABLE STYLES */
+.adm-table-container {
+    background: white;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.adm-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.adm-table thead th {
+    background: #f8fafc;
+    padding: 18px 25px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.adm-table tbody td {
+    padding: 18px 25px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.adm-td-id { color: #94a3b8; font-weight: 600; width: 60px; }
+.adm-td-main { font-weight: 800; }
+.adm-td-sub { color: #64748b; font-size: 0.85rem; }
+
+/* STATUS BADGES */
+.adm-badge-status {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.adm-badge-status.present { background: #f0fdf4; color: #10b981; }
+.adm-badge-status.absent { background: #fef2f2; color: #ef4444; }
+.adm-badge-status.not_marked { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+.adm-table-empty {
+    text-align: center;
+    padding: 50px !important;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* PRINT MEDIA OVERRIDES */
 @media print {
-    .sidebar-admin, .navbar, .btn-action, .date-input-wrapper {
-        display: none !important;
-    }
-    .col-md-10 {
-        width: 100% !important;
-    }
-    .table-responsive {
-        border: none !important;
-        box-shadow: none !important;
-    }
+    .no-print { display: none !important; }
+    .adm-page-content { padding: 0; }
+    .adm-table-container { border: none; box-shadow: none; }
+    body { background: white; }
 }

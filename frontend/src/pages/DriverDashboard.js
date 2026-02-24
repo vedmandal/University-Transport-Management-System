@@ -2,267 +2,231 @@ import api from "../api/axios";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../socket";
+import AsyncSelect from "react-select/async";
 import "./DriverDashboard.css";
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
   const watchIdRef = useRef(null);
-
+  
   const [busId, setBusId] = useState(null);
   const [busNo, setBusNo] = useState("");
+  const [driverName, setDriverName] = useState(""); 
+  const [routeStops, setRouteStops] = useState([]);
+  const [sharing, setSharing] = useState(() => localStorage.getItem("sharing") === "true");
+  const [bookings, setBookings] = useState([]);
 
-  // ✅ Persist sharing state
-  const [sharing, setSharing] = useState(() => {
-    return localStorage.getItem("sharing") === "true";
-  });
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [manualSeat, setManualSeat] = useState("");
+  const [manualPickup, setManualPickup] = useState("");
+  const [manualDrop, setManualDrop] = useState("");
 
-  /* ===============================
-     SAVE SHARING STATE
-  =============================== */
   useEffect(() => {
-    localStorage.setItem("sharing", sharing);
-  }, [sharing]);
-
-  /* ===============================
-     LOGOUT
-  =============================== */
-  const handleLogout = () => {
-    stopTracking();
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("sharing");
-
-    socket.disconnect();
-    navigate("/");
-  };
-
-  /* ===============================
-     FETCH ASSIGNED BUS
-  =============================== */
-  useEffect(() => {
-    const fetchBus = async () => {
+    const fetchBusData = async () => {
       try {
         const res = await api.get("/bus/my-bus");
-        setBusId(res.data.busId);
-        setBusNo(res.data.busNo || "Active Bus");
-      } catch (err) {
-        console.error("Failed to fetch bus", err);
-      }
+        if (res.data.success) {
+          setBusId(res.data.busId);
+          setBusNo(res.data.busNo);
+          setDriverName(res.data.driverName || "Driver");
+          setRouteStops(res.data.route?.stops || []);
+        }
+      } catch (err) { console.error("Data Fetch Error:", err); }
     };
-    fetchBus();
+    fetchBusData();
   }, []);
 
-  /* ===============================
-     JOIN BUS ROOM
-  =============================== */
-  useEffect(() => {
+  const fetchBookings = async () => {
     if (!busId) return;
+    try {
+      const res = await api.get(`/bookings/driver/${busId}`);
+      setBookings(res.data.bookings || []);
+    } catch (err) { console.error(err); }
+  };
 
-    const joinRoom = () => {
-      socket.emit("joinBus", busId);
-    };
+  useEffect(() => { if (busId) fetchBookings(); }, [busId]);
 
-    if (!socket.connected) {
-      socket.connect();
-    }
+  const handleLogout = () => {
+    if (sharing) stopTracking();
+    localStorage.clear();
+    navigate("/login");
+  };
 
-    if (socket.connected) {
-      joinRoom();
-    }
-
-    socket.on("connect", joinRoom);
-
-    return () => socket.off("connect", joinRoom);
-  }, [busId]);
-
-  /* ===============================
-     START TRACKING
-  =============================== */
   const startTracking = () => {
     if (!busId) return;
-
-    if (!("geolocation" in navigator)) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-
+    if (!socket.connected) socket.connect();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-
-        console.log("GPS UPDATE:", latitude, longitude);
-
-        socket.emit("sendLocation", {
-          busId,
-          lat: latitude,
-          lng: longitude,
-        });
+        socket.emit("sendLocation", { busId, lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      (err) => console.error("Location error:", err.message),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 20000,
-      }
+      (err) => console.error(err),
+      { enableHighAccuracy: true }
     );
-
     setSharing(true);
+    localStorage.setItem("sharing", "true");
   };
 
-  /* ===============================
-     STOP TRACKING
-  =============================== */
   const stopTracking = () => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-
+    if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     setSharing(false);
-    localStorage.removeItem("sharing");
+    localStorage.setItem("sharing", "false");
   };
 
-  /* ===============================
-     AUTO RESUME AFTER REFRESH
-  =============================== */
-  useEffect(() => {
-    if (busId && sharing) {
-      startTracking();
-    }
-    // eslint-disable-next-line
-  }, [busId]);
+  const updateStatus = async (id, status) => {
+    await api.put(`/bookings/status/${id}`, { status });
+    fetchBookings();
+  };
 
-  /* ===============================
-     CLEANUP ON UNMOUNT
-  =============================== */
-  useEffect(() => {
-    return () => {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
-    };
-  }, []);
+  const markAttendance = async (id, attendance) => {
+    await api.put(`/bookings/attendance/${id}`, { attendance });
+    fetchBookings();
+  };
 
-  /* ===============================
-     UI (UNCHANGED STRUCTURE)
-  =============================== */
+  const submitFinal = async () => {
+    await api.post(`/bookings/finalize/${busId}`);
+    alert("Manifest Finalized.");
+    fetchBookings();
+  };
 
-  if (!busId) {
-    return (
-      <div className="container vh-100 d-flex justify-content-center align-items-center bg-dark">
-        <div className="card border-0 shadow-lg p-4 text-center bg-secondary text-white position-relative">
-          <button 
-            className="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-          <i className="bi bi-exclamation-triangle fs-1 mb-3 text-warning"></i>
-          <h4 className="fw-bold">No Bus Assigned</h4>
-          <p className="opacity-75">Please contact the administrator.</p>
-        </div>
-      </div>
-    );
-  }
+  const loadStudentOptions = async (inputValue) => {
+    if (!inputValue) return [];
+    try {
+      const res = await api.get(`/auth/students/search?query=${inputValue}`);
+      return res.data.students.map((s) => ({ value: s._id, label: `${s.name} (${s.email})` }));
+    } catch (err) { return []; }
+  };
+
+  const addStudentManually = async () => {
+    if (!selectedStudent || !manualSeat || !manualPickup || !manualDrop) return alert("Fill all fields");
+    try {
+      await api.post(`/bookings/driver/add/${busId}`, {
+        studentId: selectedStudent.value, seatNumber: manualSeat, pickupStop: manualPickup, dropStop: manualDrop
+      });
+      setSelectedStudent(null); setManualSeat(""); fetchBookings();
+    } catch (err) { alert("Error adding student"); }
+  };
+
+  if (!busId) return <div className="drv-loading-screen">Terminal Booting...</div>;
 
   return (
-    <div className="min-vh-100" style={{ backgroundColor: "#0f0f1a" }}>
-      <nav className="navbar navbar-dark bg-dark-header border-bottom border-secondary border-opacity-10 px-4 py-3">
-        <span className="navbar-brand fw-bold d-flex align-items-center">
-          <div className={`status-dot ${sharing ? 'pulse-green' : 'bg-secondary'} me-2`}></div> 
-          Driver Terminal
-        </span>
-
-        <div className="d-flex align-items-center gap-3">
-          <span className="text-white-50 small d-none d-md-block">V 2.0.4</span>
-          <button 
-            className="btn btn-logout-driver d-flex align-items-center gap-2"
-            onClick={handleLogout}
-          >
-            <i className="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </button>
+    <div className="drv-page-container">
+      {/* 1. HEADER */}
+      <nav className="drv-header shadow-sm">
+        <div className="drv-header-inner">
+          <div className="drv-brand">
+            <div className="drv-logo-sq">🚌</div>
+            <div className="drv-brand-info">
+              <span className="drv-brand-name">CampusCommute</span>
+              <span className="drv-brand-tag">DRIVER CONSOLE</span>
+            </div>
+          </div>
+          <div className="drv-header-actions">
+            <div className="drv-user-info">
+              <span className="drv-user-label">LOGGED IN</span>
+              <span className="drv-user-val">{driverName}</span>
+            </div>
+            <button className="drv-logout-btn" onClick={handleLogout}>LOGOUT</button>
+          </div>
         </div>
       </nav>
 
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-md-5">
-            <div className="driver-card shadow-lg border-0 overflow-hidden">
-              <div className="p-4 bg-white text-center border-bottom">
-                <div className="bus-avatar mx-auto mb-3">
-                  <i className="bi bi-bus-front text-primary fs-2"></i>
-                </div>
-                <h3 className="fw-bold text-dark mb-1">{busNo}</h3>
-                <code className="text-muted small fw-bold">
-                  ID: {busId.substring(0, 12)}
-                </code>
-              </div>
-
-              <div className="p-4 bg-light">
-                {!sharing ? (
-                  <div className="text-center">
-                    <div className="alert bg-white border mb-4 py-3">
-                      <i className="bi bi-geo-alt text-muted me-2"></i>
-                      <span className="text-muted small fw-semibold">
-                        Ready to begin tracking?
-                      </span>
-                    </div>
-                    <button
-                      className="btn btn-emerald btn-lg w-100 py-3 fw-bold shadow"
-                      onClick={startTracking}
-                    >
-                      🚀 START TRIP
-                    </button>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="live-status-card mb-4">
-                      <div className="pulse-container mb-2">
-                        <span className="dot pulse"></span>
-                      </div>
-                      <h6 className="text-success fw-bold mb-0">
-                        LIVE TRACKING ACTIVE
-                      </h6>
-                      <small className="text-muted">
-                        Students can see your location
-                      </small>
-                    </div>
-
-                    <button
-                      className="btn btn-stop-trip btn-lg w-100 py-3 fw-bold"
-                      onClick={stopTracking}
-                    >
-                      🛑 END TRIP
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3 bg-white text-center border-top">
-                <div className="row g-0">
-                  <div className="col-6 border-end">
-                    <small className="d-block text-muted">GPS Quality</small>
-                    <span className="text-success fw-bold">Excellent</span>
-                  </div>
-                  <div className="col-6">
-                    <small className="d-block text-muted">Network</small>
-                    <span className="text-primary fw-bold">Stable</span>
-                  </div>
-                </div>
-              </div>
-
+      <div className="container py-4">
+        {/* 2. DYNAMIC STATUS BANNER */}
+        <div className="drv-status-banner mb-3">
+          {sharing ? (
+            <div className="drv-msg drv-msg-active">Started sending location</div>
+          ) : (
+            <div className="drv-msg drv-msg-done">Shift completed. Great work today!</div>
+          )}
+        </div>
+        
+        {/* 3. VEHICLE CONTROL BAR */}
+        <div className="drv-control-bar shadow-sm mb-4">
+          <div className="drv-bus-id-box">
+            <div className="drv-bus-sq-dark">{busNo.replace(/\D/g,'') || 'B'}</div>
+            <div className="drv-bus-meta">
+              <span className="drv-meta-label">VEHICLE ID</span>
+              <span className="drv-meta-val">{busNo}</span>
             </div>
           </div>
+          <div className="drv-trip-toggle">
+            {!sharing ? (
+              <button className="drv-btn-start" onClick={startTracking}>START SHIFT</button>
+            ) : (
+              <button className="drv-btn-stop" onClick={stopTracking}>END SHIFT</button>
+            )}
+          </div>
+        </div>
+
+        {/* 4. LISTS */}
+        <div className="row g-4 mb-4">
+          <div className="col-lg-6">
+            <div className="drv-list-card">
+              <div className="drv-card-title yellow-head">PENDING REQUESTS</div>
+              <div className="drv-card-scroll">
+                {bookings.filter(b => b.status === "pending").map(b => (
+                  <div key={b._id} className="drv-list-item">
+                    <div className="drv-item-text">
+                       <span className="drv-student-name">{b.studentId?.name}</span>
+                       <span className="drv-seat-no">Seat: {b.seatNumber}</span>
+                    </div>
+                    <button className="drv-btn-accept" onClick={() => updateStatus(b._id, "approved")}>Accept</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-lg-6">
+            <div className="drv-list-card">
+              <div className="drv-card-title blue-head">ON-BOARD MANIFEST</div>
+              <div className="drv-card-scroll">
+                {bookings.filter(b => b.status === "approved").map(b => (
+                  <div key={b._id} className={`drv-list-item ${b.attendance === 'present' ? 'row-active' : ''}`}>
+                    <div className="drv-item-text">
+                       <span className="drv-student-name">{b.studentId?.name}</span>
+                       <span className="drv-route-info">{b.pickupStop} → {b.dropStop}</span>
+                    </div>
+                    <button className={`drv-btn-mark ${b.attendance === 'present' ? 'mark-on' : ''}`} onClick={() => markAttendance(b._id, "present")}>
+                      {b.attendance === 'present' ? 'ONBOARD' : 'MARK'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button className="drv-btn-sync mb-5" onClick={submitFinal}>SYNC DATA TO CLOUD</button>
+
+        {/* 5. MANUAL FORM */}
+        <div className="drv-form-card shadow-sm mb-5">
+            <div className="drv-form-header">Manual Boarding Entry</div>
+            <div className="drv-form-content">
+                <div className="drv-form-group">
+                    <label className="drv-label">Search Student</label>
+                    <AsyncSelect cacheOptions loadOptions={loadStudentOptions} value={selectedStudent} onChange={setSelectedStudent} className="drv-select-wrap" />
+                </div>
+                <div className="drv-form-group">
+                    <label className="drv-label">Seat Number</label>
+                    <input type="number" className="drv-form-input" value={manualSeat} onChange={(e) => setManualSeat(e.target.value)} />
+                </div>
+                <div className="drv-form-group">
+                    <label className="drv-label">Pickup Stop</label>
+                    <select className="drv-form-input" value={manualPickup} onChange={(e) => setManualPickup(e.target.value)}>
+                        <option value="">Select Stop</option>
+                        {routeStops.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                    </select>
+                </div>
+                <div className="drv-form-group">
+                    <label className="drv-label">Drop-off Point</label>
+                    <select className="drv-form-input" value={manualDrop} onChange={(e) => setManualDrop(e.target.value)}>
+                        <option value="">Select Point</option>
+                        {routeStops.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                    </select>
+                </div>
+                <button className="drv-btn-submit" onClick={addStudentManually}>CONFIRM ENTRY</button>
+            </div>
         </div>
       </div>
     </div>

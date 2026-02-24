@@ -1,6 +1,6 @@
 import api from "../api/axios";
 import { useEffect, useState } from "react";
-import "./BusList.css"; // Reuse your core styles
+import "./BusList.css"; 
 
 export default function BusList({ onSelectBus }) {
   const [buses, setBuses] = useState([]);
@@ -30,62 +30,62 @@ export default function BusList({ onSelectBus }) {
     }
   }, [buses, selectedBusId, onSelectBus]);
 
-  if (loading)
-    return (
-      <div className="p-4 text-center">
-        <div className="spinner-border spinner-border-sm text-primary me-2"></div>
-        <span className="text-muted fw-bold">Finding available buses...</span>
-      </div>
-    );
-
-  if (error)
-    return <div className="p-3 text-danger fw-bold text-center border rounded-3 bg-light">{error}</div>;
+  if (loading) return (
+    <div className="bus-loader p-5 text-center">
+      <div className="spinner-border text-indigo" role="status"></div>
+      <div className="mt-3 text-muted small fw-bold">SYNCING FLEET...</div>
+    </div>
+  );
 
   return (
-    <div className="bus-selection-wrapper pe-2" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-      <h6 className="text-uppercase small fw-bold text-muted mb-3 px-1">Available Fleet</h6>
+    <div className="bus-selection-container">
+      <div className="d-flex align-items-center justify-content-between mb-4 px-2">
+        <h5 className="sidebar-title">Available Buses</h5>
+        <span className="count-badge">{buses.length}</span>
+      </div>
       
-      {buses.map((bus) => {
-        const isSelected = selectedBusId === bus._id;
-        
-        return (
-          <div
-            key={bus._id}
-            className={`bus-select-card mb-3 p-3 shadow-sm border ${isSelected ? "selected" : ""}`}
-            onClick={() => {
-              setSelectedBusId(bus._id);
-              onSelectBus(bus);
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center">
-                <div className={`bus-icon-mini me-2 ${isSelected ? "bg-white text-primary" : "bg-primary text-white"}`}>
-                  <i className="bi bi-bus-front"></i>
+      <div className="bus-list-scroll">
+        {buses.map((bus) => {
+          const isSelected = selectedBusId === bus._id;
+          return (
+            <div
+              key={bus._id}
+              className={`bus-premium-card ${isSelected ? "active" : ""}`}
+              onClick={() => {
+                setSelectedBusId(bus._id);
+                onSelectBus(bus);
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="bus-plate">
+                  <span className="plate-label">VEHICLE</span>
+                  <span className="plate-number">{bus.busNo}</span>
                 </div>
-                <span className={`fw-bold fs-5 ${isSelected ? "text-white" : "text-dark"}`}>
-                  {bus.busNo}
-                </span>
+                <div className="status-indicator">
+                  <div className={`status-dot ${isSelected ? 'bg-white' : 'pulse-green'}`}></div>
+                  <span className={`status-text ${isSelected ? 'text-white' : 'text-success'}`}>
+                    LIVE
+                  </span>
+                </div>
               </div>
-              {isSelected && <i className="bi bi-check-circle-fill text-white fs-5"></i>}
-            </div>
 
-            <div className={`route-info-row p-2 rounded-2 ${isSelected ? "bg-glass-light" : "bg-light"}`}>
-              <div className="d-flex align-items-center mb-1">
-                <i className={`bi bi-geo-alt-fill me-2 ${isSelected ? "text-white" : "text-primary"}`}></i>
-                <small className={`fw-semibold ${isSelected ? "text-white" : "text-dark"}`}>
-                  {bus.routeId?.routeName || "General Route"}
-                </small>
+              <div className="route-details">
+                <div className="detail-item">
+                  <i className="bi bi-geo-alt"></i>
+                  <span>{bus.routeId?.routeName || "General Route"}</span>
+                </div>
+                <div className="detail-item mt-2">
+                  <i className="bi bi-person"></i>
+                  <span>{bus.driverId?.name || "Driver Unassigned"}</span>
+                </div>
               </div>
-              <div className="d-flex align-items-center">
-                <i className={`bi bi-person-badge me-2 ${isSelected ? "text-white-50" : "text-muted"}`}></i>
-                <small className={`${isSelected ? "text-white-50" : "text-muted"}`}>
-                  {bus.driverId?.name || "Assigning Driver..."}
-                </small>
-              </div>
+              
+              {/* Decorative SVG Bus Icon */}
+              <i className="bi bi-bus-front card-bg-icon"></i>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

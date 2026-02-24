@@ -63,23 +63,43 @@ export const getBuses=async(req,res)=>{
 }
 
 export const getMyBus = async (req, res) => {
-    try {
-      const driverId = req.user.id;
-  
-      const bus = await busModel.findOne({ driverId });
-  
-      if (!bus) {
-        return res.status(404).send({ message: "No bus assigned" });
-      }
-  
-      res.status(200).send({
-        success: true,
-        busId: bus._id
+  try {
+    const driverId = req.user.id;
+
+    const bus = await busModel
+      .findOne({ driverId })
+      .populate({
+        path: "driverId",
+        select: "name" // 🔥 This fetches the driver's name from User model
+      })
+      .populate({
+        path: "routeId",
+        select: "name stops"
       });
-    } catch (error) {
-      res.status(500).send({ message: "Failed to fetch bus" });
+
+    if (!bus) {
+      return res.status(404).send({
+        success: false,
+        message: "No bus assigned"
+      });
     }
-  };
+
+    res.status(200).send({
+      success: true,
+      busId: bus._id,
+      busNo: bus.busNo,
+      totalSeats: bus.totalSeats,
+      route: bus.routeId , // 🔥 this is important
+      driverName: bus.driverId?.name,
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch bus"
+    });
+  }
+};
   
   export const getAllBusLocations = async (req, res) => {
     const buses = await busModel.find(

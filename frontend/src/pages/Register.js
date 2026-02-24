@@ -1,8 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import "./Login.css"; // Using the same CSS for visual consistency
+import "./Login.css"; // Shared CSS for identical styling
 
 export default function Register() {
   const navigate = useNavigate();
@@ -30,102 +30,83 @@ export default function Register() {
   };
 
   return (
-    <div className="login-wrapper d-flex align-items-center justify-content-center">
-      <div className="login-container container shadow-lg overflow-hidden">
-        <div className="row h-100 g-0">
-          
-          {/* LEFT SIDE: DESIGN & BRANDING */}
-          <div className="col-md-6 d-none d-md-block p-0 position-relative">
-            <div className="image-overlay">
-              <div className="brand-content p-5 text-white h-100 d-flex flex-column">
-                <span className="badge rounded-pill bg-glass mb-3 align-self-start">Join the Network</span>
-                <h1 className="display-5 fw-bold mb-3">Create <br/>Account.</h1>
-                <p className="lead opacity-75">Get real-time updates and manage your campus commute effortlessly.</p>
-                
-                <div className="mt-auto">
-                   <div className="d-flex gap-2">
-                      <div className="dot"></div>
-                      <div className="dot active"></div>
-                      <div className="dot"></div>
-                   </div>
-                </div>
-              </div>
-            </div>
+    <div className="unified-auth-root">
+      {/* Mesh Background Blurs (Same as Login) */}
+      <div className="mesh-gradient-1"></div>
+      <div className="mesh-gradient-2"></div>
+
+      <div className="unified-glass-card">
+        <div className="auth-header-content text-center">
+          <div className="auth-icon-box">
+            {/* User Plus Icon for Registration */}
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
+               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+               <circle cx="8.5" cy="7" r="4" />
+               <line x1="20" y1="8" x2="20" y2="14" />
+               <line x1="23" y1="11" x2="17" y2="11" />
+            </svg>
+          </div>
+          <h2 className="welcome-title">Create Account</h2>
+          <p className="welcome-subtitle">Join the KRMU Transit Network</p>
+        </div>
+
+        <form onSubmit={submit} className="unified-auth-form mt-4">
+          <div className="unified-input-group">
+            <i className="bi bi-person"></i>
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
 
-          {/* RIGHT SIDE: REGISTRATION FORM */}
-          <div className="col-md-6 p-5 d-flex flex-column justify-content-center bg-card-dark overflow-auto">
-            <div className="form-header mb-4">
-              <h2 className="fw-bold text-white mb-1">Get Started</h2>
-              <p className="custom-text-muted">Fill in your details to join KRMU Transit</p>
-            </div>
-
-            <form onSubmit={submit}>
-              <div className="mb-3">
-                <label className="form-label text-secondary-alt small fw-bold text-uppercase">Full Name</label>
-                <input
-                  className="form-control custom-input"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label text-secondary-alt small fw-bold text-uppercase">College Email</label>
-                <input
-                  type="email"
-                  className="form-control custom-input"
-                  placeholder="name@krmu.edu.in"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="row mb-4">
-                <div className="col-md-6 mb-3 mb-md-0">
-                  <label className="form-label text-secondary-alt small fw-bold text-uppercase">Password</label>
-                  <input
-                    type="password"
-                    className="form-control custom-input"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label text-secondary-alt small fw-bold text-uppercase">Role</label>
-                  <select
-                    className="form-select custom-input select-icon-white"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <option value="student">Student</option>
-                    <option value="driver">Driver</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-login w-100 py-3 fw-bold mb-3 d-flex align-items-center justify-content-center"
-                disabled={loading}
-              >
-                {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : "Create Account"}
-              </button>
-            </form>
-
-            <div className="text-center mt-2">
-              <p className="small custom-text-muted">
-                Already have an account? <Link to="/" className="color-primary text-decoration-none fw-bold">Sign In</Link>
-              </p>
-            </div>
+          <div className="unified-input-group mt-3">
+            <i className="bi bi-envelope-at"></i>
+            <input
+              type="email"
+              placeholder="name@krmu.edu.in"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
+          <div className="unified-input-group mt-3">
+            <i className="bi bi-shield-lock"></i>
+            <input
+              type="password"
+              placeholder="Create Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="unified-input-group mt-3">
+            <i className="bi bi-people"></i>
+            <select
+              className="form-select border-0 bg-transparent shadow-none fw-semibold text-dark"
+              style={{ fontSize: "0.9rem", color: "#1e293b" }}
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="student">Student</option>
+              <option value="driver">Driver</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <button type="submit" className="unified-btn-primary" disabled={loading}>
+            {loading ? "Creating Account..." : "Register Now"}
+          </button>
+        </form>
+
+        <div className="unified-auth-footer">
+          <div className="mt-4 unified-signup-text">
+            Already have an account? <Link to="/">Sign In here</Link>
+          </div>
         </div>
       </div>
     </div>

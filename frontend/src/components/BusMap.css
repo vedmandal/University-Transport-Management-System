@@ -1,53 +1,90 @@
-/* Pulse States */
-.status-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
+/* Container Tweaks */
+.map-terminal-wrapper {
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
 }
 
-.pulse-green {
-    background-color: #28a745;
-    box-shadow: 0 0 0 rgba(40, 167, 69, 0.4);
-    animation: pulse-green-anim 2s infinite;
+.leaflet-container-indigo {
+    z-index: 1;
 }
 
-.pulse-orange {
-    background-color: #fd7e14;
-    box-shadow: 0 0 0 rgba(253, 126, 20, 0.4);
-    animation: pulse-orange-anim 2s infinite;
-}
-
-@keyframes pulse-green-anim {
-    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-}
-
-@keyframes pulse-orange-anim {
-    0% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(253, 126, 20, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0); }
-}
-
-/* Loading Overlay */
-.map-loading-overlay {
+/* Glass Overlay */
+.map-glass-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 15, 26, 0.2);
-    backdrop-filter: blur(2px);
+    background: rgba(244, 247, 254, 0.4);
+    backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
 }
 
-.bg-soft-primary {
-    background-color: rgba(108, 92, 231, 0.1);
+.glass-loader-card {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    text-align: center;
+    border: 1px solid #f0f0f0;
 }
 
-.map-card {
-    transition: transform 0.3s ease;
+/* Stat Footer - Indigo Style */
+.map-footer-premium {
+    background: #f8fafc;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #edf2f7;
+}
+
+.stat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.stat-pill-divider {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+    align-self: center;
+}
+
+/* Colors */
+.text-emerald { color: #10b981; }
+.text-slate { color: #1e293b; }
+.fw-800 { font-weight: 800; }
+
+/* Custom Spinner */
+.spinner-indigo {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

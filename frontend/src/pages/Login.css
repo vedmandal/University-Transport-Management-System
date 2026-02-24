@@ -1,113 +1,167 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
 
-body, .login-wrapper {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #0f0f1a;
-}
-
-.login-wrapper {
+.unified-auth-root {
     min-height: 100vh;
-}
-
-.login-container {
-    max-width: 1000px;
-    height: 650px;
-    border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background-color: #161626;
-}
-
-.bg-card-dark {
-    background-color: #161626;
-}
-
-/* Image Side Styles */
-.image-overlay {
-    height: 100%;
-    background: linear-gradient(rgba(108, 92, 231, 0.4), rgba(15, 15, 26, 0.9)), 
-                url('https://images.unsplash.com/photo-1570126618953-d437176e8c79?q=80&w=1000&auto=format&fit=crop');
-    background-size: cover;
-    background-position: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f6ff;
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
 }
 
-/* Visibility & Font Fixes */
-.text-white { color: #ffffff !important; }
+/* Recreating the screenshot's soft light flares */
+.mesh-gradient-1 {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(203, 213, 225, 0.4) 0%, transparent 70%);
+    top: -200px; left: -100px;
+    z-index: 1;
+}
 
-.custom-text-muted {
-    color: #a0a0c0 !important;
+.mesh-gradient-2 {
+    position: absolute;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(219, 234, 254, 0.5) 0%, transparent 70%);
+    bottom: -200px; right: -100px;
+    z-index: 1;
+}
+
+.unified-glass-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.5); /* Matching screenshot glass density */
+    backdrop-filter: blur(25px);
+    border-radius: 40px;
+    padding: 50px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.04);
+}
+
+.auth-icon-box {
+    width: 64px; height: 64px;
+    background: white;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.08);
+}
+
+.welcome-title {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+}
+
+.welcome-subtitle {
+    color: #64748b;
+    font-weight: 600;
     font-size: 0.95rem;
+    margin-top: 5px;
 }
 
-.text-secondary-alt {
-    color: #8f8fb1 !important;
-    letter-spacing: 0.5px;
+/* Input Styles from Screenshot */
+.unified-input-group {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    display: flex; align-items: center;
+    padding: 4px 18px;
+    transition: 0.3s ease;
 }
 
-/* Input Styling & Visibility */
-.custom-input {
-    background-color: #1f1f33 !important;
-    border: 1px solid #2e2e4a !important;
-    color: #ffffff !important;
-    padding: 14px 16px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+.unified-input-group i { color: #94a3b8; font-size: 1.1rem; }
+
+.unified-input-group input {
+    width: 100%; border: none; background: transparent;
+    padding: 14px 12px; font-weight: 600;
+    color: #1e293b; font-size: 0.9rem;
 }
 
-.custom-input::placeholder {
-    color: #58587a !important;
-    opacity: 1;
+.unified-input-group input::placeholder { color: #94a3b8; font-weight: 500; }
+.unified-input-group input:focus { outline: none; }
+
+.unified-input-group:focus-within {
+    background: white;
+    border-color: #3b82f6;
+    box-shadow: 0 8px 15px rgba(59, 130, 246, 0.05);
 }
 
-.custom-input:focus {
-    border-color: #6c5ce7 !important;
-    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15) !important;
-    outline: none;
-}
-
-/* Fix for Chrome yellow/white autofill background */
-.custom-input:-webkit-autofill,
-.custom-input:-webkit-autofill:hover, 
-.custom-input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-box-shadow: 0 0 0px 1000px #1f1f33 inset !important;
-    transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Buttons */
-.btn-login {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+/* Button Color from Screenshot */
+.unified-btn-primary {
+    width: 100%;
+    background: #3b82f6;
+    color: white;
     border: none;
-    color: white !important;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 25px;
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.3);
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.btn-login:hover {
+.unified-btn-primary:hover {
+    background: #2563eb;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
-    opacity: 0.9;
+    box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
 }
 
-.color-primary {
-    color: #a29bfe !important;
+.unified-auth-footer {
+    text-align: center;
+    margin-top: 30px;
 }
 
-.bg-glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.unified-link-primary {
+    color: #3b82f6;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
-.dot {
-    width: 8px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
+.unified-signup-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
 }
-.dot.active {
-    width: 24px;
-    background: #a29bfe;
-    border-radius: 10px;
+
+.unified-signup-text a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 800;
+}
+/* Custom styling for the Role Select dropdown to match screenshot inputs */
+.unified-input-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233b82f6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem !important;
+}
+
+/* Ensure icons have the same soft blue/gray tone as the reference */
+.unified-input-group i {
+    color: #3b82f6; /* Matching the button and logo blue */
+    opacity: 0.7;
+    margin-right: 5px;
+}
+
+/* Placeholder text color matching the screenshot */
+.unified-input-group input::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+@media (max-width: 480px) {
+    .unified-glass-card { padding: 40px 25px; border-radius: 30px; }
 }

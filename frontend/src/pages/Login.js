@@ -1,9 +1,9 @@
-import api from "../api/axios";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../api/axios";
 import { toast } from "react-toastify";
-import "./Login.css"; 
+import "./Login.css";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
@@ -20,103 +20,73 @@ export default function Login() {
 
     try {
       const res = await api.post("/auth/login", { email, password });
-      login(res.data.token, res.data.role);
-      toast.success("Login successful");
-
-      const userRole = res.data.role.toLowerCase();
-      if (userRole === "student") navigate("/student");
-      else if (userRole === "driver") navigate("/driver");
-      else if (userRole === "admin") navigate("/admin/track"); 
-      
+      if (login) {
+        login(res.data.token, res.data.role);
+        toast.success("Welcome Back!");
+        const userRole = res.data.role.toLowerCase();
+        if (userRole === "student") navigate("/student");
+        else if (userRole === "driver") navigate("/driver");
+        else if (userRole === "admin") navigate("/admin/track");
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid credentials");
-      console.error("Login Error:", err);
+      toast.error(err.response?.data?.message || "Invalid Credentials");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-wrapper d-flex align-items-center justify-content-center">
-      <div className="login-container container shadow-lg overflow-hidden">
-        <div className="row h-100 g-0">
-          
-          {/* LEFT SIDE: DESIGN & BRANDING */}
-          <div className="col-md-6 d-none d-md-block p-0 position-relative">
-            <div className="image-overlay">
-              <div className="brand-content p-5 text-white h-100 d-flex flex-column">
-                <span className="badge rounded-pill bg-glass mb-3 align-self-start">Bus Tracking System v2.0</span>
-                <h1 className="display-5 fw-bold mb-3">KRMU <br/>Transit.</h1>
-                <p className="lead opacity-75">Join our university network for safer, smarter, and faster commutes.</p>
-                
-                <div className="mt-auto">
-                   <div className="d-flex gap-2">
-                      <div className="dot active"></div>
-                      <div className="dot"></div>
-                      <div className="dot"></div>
-                   </div>
-                </div>
-              </div>
-            </div>
+    <div className="unified-auth-root">
+      {/* Mesh Background Blurs */}
+      <div className="mesh-gradient-1"></div>
+      <div className="mesh-gradient-2"></div>
+
+      <div className="unified-glass-card">
+        <div className="auth-header-content text-center">
+          <div className="auth-icon-box">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
+               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeOpacity="0"/>
+               <circle cx="12" cy="12" r="10" />
+               <path d="M12 8v4l3 3" />
+            </svg>
+          </div>
+          <h2 className="welcome-title">Welcome Back</h2>
+          <p className="welcome-subtitle">KRMU Transit Dashboard</p>
+        </div>
+
+        <form onSubmit={submit} className="unified-auth-form mt-4">
+          <div className="unified-input-group">
+            <i className="bi bi-envelope-at"></i>
+            <input
+              type="email"
+              placeholder="name@krmu.edu.in"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
-          {/* RIGHT SIDE: AUTH FORM */}
-          <div className="col-md-6 p-5 d-flex flex-column justify-content-center bg-card-dark">
-            <div className="form-header mb-4">
-              <h2 className="fw-bold text-white mb-1">Welcome Back</h2>
-              <p className="custom-text-muted">Enter your credentials to access the portal</p>
-            </div>
-
-            <form onSubmit={submit}>
-              <div className="mb-4">
-                <label className="form-label text-secondary-alt small fw-bold text-uppercase">Email Address</label>
-                <input
-                  type="email"
-                  className="form-control custom-input"
-                  placeholder="name@krmu.edu.in"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <div className="d-flex justify-content-between">
-                    <label className="form-label text-secondary-alt small fw-bold text-uppercase">Password</label>
-                    <a href="#" className="small text-decoration-none color-primary">Forgot?</a>
-                </div>
-                <input
-                  type="password"
-                  className="form-control custom-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-login w-100 py-3 fw-bold mb-3 d-flex align-items-center justify-content-center"
-                disabled={loading}
-              >
-                {loading ? (
-                  <><span className="spinner-border spinner-border-sm me-2"></span>Authenticating...</>
-                ) : (
-                  "Sign In"
-                )}
-              </button>
-            </form>
-
-            <div className="text-center mt-3">
-              <p className="small custom-text-muted">
-                New to the system? <Link to="/register" className="color-primary text-decoration-none fw-bold">Create Account</Link>
-              </p>
-            </div>
+          <div className="unified-input-group mt-3">
+            <i className="bi bi-shield-lock"></i>
+            <input
+              type="password"
+              placeholder="Account Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
 
+          <button type="submit" className="unified-btn-primary" disabled={loading}>
+            {loading ? "Verifying Credentials..." : "Log in to Portal"}
+          </button>
+        </form>
+
+        <div className="unified-auth-footer">
+          <Link to="/forgot" className="unified-link-primary">Forgot Password?</Link>
+          <div className="mt-4 unified-signup-text">
+            Don't have an account? <Link to="/register">Sign Up here</Link>
+          </div>
         </div>
       </div>
     </div>

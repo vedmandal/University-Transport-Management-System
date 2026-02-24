@@ -4,93 +4,80 @@ import "./AdminLayout.css";
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isActive = (path) => location.pathname === path ? "active-link" : "";
+  const isActive = (path) => location.pathname === path ? "adm-link-active" : "";
 
-  // 🚪 Logout Handler
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    // Clear any other admin-specific session data
     navigate("/");
   };
 
   return (
-    <div className="container-fluid min-vh-100 p-0" style={{ backgroundColor: "#12121f" }}>
+    <div className="adm-layout-root">
       <div className="row g-0">
         {/* 🔵 SIDEBAR */}
-        <div className="col-md-2 sidebar-admin shadow-lg d-flex flex-column justify-content-between pb-4">
-          <div>
-            <div className="sidebar-header text-center py-4">
-              <h5 className="fw-bold text-white mb-0">Admin Panel</h5>
-              <p className="text-info small mb-0" style={{ fontSize: '12px' }}>KRMU Transit System</p>
+        <div className="col-md-2 adm-sidebar shadow-sm">
+          <div className="adm-sidebar-top">
+            <div className="adm-brand-box">
+              <span className="adm-brand-icon">🛡️</span>
+              <div className="adm-brand-text">
+                <h5 className="adm-brand-name">CampusCommute</h5>
+                <p className="adm-brand-sub">ADMIN TERMINAL</p>
+              </div>
             </div>
 
-            <ul className="nav flex-column gap-2 px-3 mt-3">
-              <li className="nav-item">
-                <Link className={`nav-link admin-nav-item ${isActive("/admin/add-bus")}`} to="/admin/add-bus">
-                  ➕ Add Bus
+            <ul className="adm-nav-list mt-4">
+              <li className="adm-nav-item">
+                <Link className={`adm-link ${isActive("/admin/add-bus")}`} to="/admin/add-bus">
+                  <span className="adm-nav-icon">➕</span> Add Bus
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link admin-nav-item ${isActive("/admin/track")}`} to="/admin/track">
-                  📍 Track Buses
+              <li className="adm-nav-item">
+                <Link className={`adm-link ${isActive("/admin/track")}`} to="/admin/track">
+                  <span className="adm-nav-icon">📍</span> Track Buses
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link admin-nav-item ${isActive("/admin/add-driver")}`} to="/admin/add-driver">
-                  👨‍✈️ Add Driver
+              <li className="adm-nav-item">
+                <Link className={`adm-link ${isActive("/admin/add-driver")}`} to="/admin/add-driver">
+                  <span className="adm-nav-icon">👨‍✈️</span> Add Driver
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link admin-nav-item ${isActive("/admin/buses")}`} to="/admin/buses">
-                  🚌 Buses
+              <li className="adm-nav-item">
+                <Link className={`adm-link ${isActive("/admin/buses")}`} to="/admin/buses">
+                  <span className="adm-nav-icon">🚌</span> Buses List
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link admin-nav-item ${isActive("/admin/add-route")}`} to="/admin/add-route">
-                  🛣️ Add Route
+              <li className="adm-nav-item">
+                <Link className={`adm-link ${isActive("/admin/add-route")}`} to="/admin/add-route">
+                  <span className="adm-nav-icon">🛣️</span> Add Route
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* SIDEBAR BOTTOM LOGOUT */}
-          <div className="px-3">
-            <button 
-              onClick={handleLogout}
-              className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 border-0 opacity-75 hover-opacity-100"
-              style={{ padding: '12px' }}
-            >
-              <i className="bi bi-power"></i> Logout Session
+          <div className="adm-sidebar-footer">
+            <button onClick={handleLogout} className="adm-logout-full">
+              LOGOUT SESSION
             </button>
           </div>
         </div>
 
         {/* ⚪ MAIN CONTENT AREA */}
-        <div className="col-md-10 content-area">
-          <nav className="navbar px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: "#1c1c2d" }}>
-            <span className="navbar-brand text-white fw-bold">Dashboard Overview</span>
-            <div className="d-flex align-items-center">
-               <span className="text-light me-3 d-none d-md-block">Welcome, <strong className="text-info">Admin</strong></span>
-               
-               {/* TOP NAV LOGOUT (ICON STYLE) */}
-               <button 
-                onClick={handleLogout}
-                className="btn btn-dark border-secondary me-3 rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: "40px", height: "40px" }}
-                title="Logout"
-               >
-                 <i className="bi bi-box-arrow-right text-danger"></i>
-               </button>
-
-               <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: "40px", height: "40px", border: "2px solid #333" }}>
-                 A
+        <div className="col-md-10 adm-content-area">
+          <nav className="adm-top-nav shadow-sm">
+            <span className="adm-page-title">Dashboard Overview</span>
+            <div className="adm-user-profile">
+               <div className="adm-user-details d-none d-md-block">
+                 <span className="adm-role-label">LOGGED IN AS</span>
+                 <span className="adm-user-name">System Admin</span>
                </div>
+               <div className="adm-avatar">A</div>
             </div>
           </nav>
           
-          <div className="px-4 pb-4">
-            <div className="content-card shadow-sm animate-fade-in">
+          <div className="adm-main-viewport">
+            <div className="adm-view-card">
               <Outlet />
             </div>
           </div>

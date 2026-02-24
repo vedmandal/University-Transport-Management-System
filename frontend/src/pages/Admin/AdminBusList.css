@@ -1,66 +1,171 @@
-/* Bus Card Specifics */
-.bus-card {
-    background: #ffffff;
-    border-radius: 18px;
+/* ADMIN BUS LIST PREMIUM THEME */
+.adm-page-content {
+    padding: 20px;
+}
+
+.adm-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adm-section-title {
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+.adm-section-subtitle {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.adm-count-pill {
+    background: #eef2ff;
+    color: #6366f1;
+    padding: 10px 18px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    border: 1px solid #c7d2fe;
+}
+
+/* BUS CARD STYLES */
+.adm-bus-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
     transition: all 0.3s ease;
-    border: 1px solid #f0f0f5 !important;
+    height: 100%;
 }
 
-.bus-card:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
-    transform: translateY(-4px);
+.adm-bus-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(99, 102, 241, 0.05);
+    border-color: #c7d2fe;
 }
 
-.bus-icon-circle {
+.adm-bus-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.adm-bus-icon-wrapper {
     width: 50px;
     height: 50px;
-    background: #f0efff;
-    color: #6c5ce7;
+    background: #f8fafc;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    border: 1px solid #e2e8f0;
 }
 
-.route-detail-box {
-    background-color: #f8f9fc;
-    padding: 12px 15px;
+.adm-bus-number {
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.adm-status-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ROUTE INFO */
+.adm-route-info-container {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+}
+
+.adm-info-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.adm-route-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.adm-route-dot {
+    width: 8px;
+    height: 8px;
+    background: #6366f1;
+    border-radius: 50%;
+}
+
+.adm-route-name {
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+/* BUTTONS */
+.adm-card-footer-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.adm-btn-track {
+    flex: 1;
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 10px;
     border-radius: 12px;
-    border: 1px solid #edf2f7;
-}
-
-/* Tracking Button - Vibrant Blue */
-.btn-track-primary {
-    background-color: #6c5ce7;
-    color: white;
-    border: none;
-    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.8rem;
     transition: 0.2s;
+    cursor: pointer;
 }
 
-.btn-track-primary:hover {
-    background-color: #5a4bcf;
-    color: white;
+.adm-btn-track:hover {
+    background: #4f46e5;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
-/* Attendance Button - Soft Dark */
-.btn-attendance-secondary {
-    background-color: #1c1c2d;
-    color: #e0e0e0;
-    border: none;
-    border-radius: 10px;
+.adm-btn-logs {
+    flex: 1;
+    background: white;
+    color: #64748b;
+    border: 2px solid #f1f5f9;
+    padding: 10px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.8rem;
     transition: 0.2s;
+    cursor: pointer;
 }
 
-.btn-attendance-secondary:hover {
-    background-color: #2a2a40;
-    color: white;
+.adm-btn-logs:hover {
+    background: #f8fafc;
+    color: #1e293b;
+    border-color: #e2e8f0;
 }
 
-.bg-success-soft {
-    background-color: rgba(40, 167, 69, 0.1);
-    font-size: 11px;
-    padding: 4px 8px;
-    border-radius: 6px;
+/* EMPTY STATE */
+.adm-empty-state {
+    padding: 40px;
+}
+
+.adm-empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
 }

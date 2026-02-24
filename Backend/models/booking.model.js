@@ -28,7 +28,29 @@ const bookingSchema=new mongoose.Schema({
        type:Date,
       
 
-    }
+    },
+
+
+    // ✅ NEW FIELD — Driver Approval
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
+  },
+
+  // ✅ NEW FIELD — Attendance
+  attendance: {
+    type: String,
+    enum: ["not_marked", "present", "absent"],
+    default: "not_marked"
+  },
+
+  // ✅ NEW FIELD — Final submission control
+  finalized: {
+    type: Boolean,
+    default: false
+  }
+
 },{timestamps:true})
 
 
