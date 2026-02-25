@@ -6,7 +6,6 @@ import api from "../api/axios";
 import "./ParentDashboard.css";
 
 const ParentDashboard = () => {
-  // Added logout from AuthContext
   const { token, role, logout } = useContext(AuthContext);
   const socket = useSocket(token);
 
@@ -58,23 +57,24 @@ const ParentDashboard = () => {
 
   return (
     <div className="parent-root">
+      {/* Visual Background Elements */}
       <div className="mesh-gradient-1"></div>
       <div className="mesh-gradient-2"></div>
 
-      <div className="container py-5 parent-content-layer">
+      <div className="container py-4 py-md-5 parent-content-layer">
         
-        {/* TOP HEADER BENTO WITH LOGOUT */}
-        <div className="bento-header mb-4">
+        {/* HEADER BENTO SECTION */}
+        <div className="bento-header mb-4 shadow-sm">
           <div className="row g-4 align-items-center">
-            <div className="col-lg-6">
+            <div className="col-12 col-lg-6 text-center text-lg-start">
               <span className="role-label-blue">Live Tracking Active</span>
               <h2 className="main-title-sm">Parent Dashboard</h2>
-              <p className="text-muted m-0">
+              <p className="text-muted m-0 small">
                 Monitoring transport for <span className="text-blue fw-bold">{studentName || "Student"}</span>
               </p>
             </div>
-            <div className="col-lg-6">
-              <div className="d-flex gap-3 justify-content-lg-end align-items-center flex-wrap">
+            <div className="col-12 col-lg-6">
+              <div className="d-flex gap-2 gap-md-3 justify-content-center justify-content-lg-end align-items-center flex-wrap">
                 {bus && (
                   <>
                     <div className="stat-pill-white">
@@ -83,13 +83,13 @@ const ParentDashboard = () => {
                     </div>
                     <div className="stat-pill-white border-blue">
                       <span className="label">ROUTE</span>
-                      <span className="value">{bus.routeId?.name || "N/A"}</span>
+                      <span className="value text-truncate" style={{maxWidth: '120px'}}>{bus.routeId?.name || "N/A"}</span>
                     </div>
                   </>
                 )}
-                {/* LOGOUT BUTTON */}
                 <button className="btn-logout-glass" onClick={logout}>
-                  <i className="bi bi-box-arrow-right me-2"></i>Sign Out
+                  <i className="bi bi-box-arrow-right me-md-2"></i>
+                  <span className="d-none d-md-inline">Sign Out</span>
                 </button>
               </div>
             </div>
@@ -97,35 +97,36 @@ const ParentDashboard = () => {
         </div>
 
         {!bus ? (
-          <div className="unified-glass-card text-center p-5 mt-5">
+          <div className="unified-glass-card text-center p-5 mt-4">
             <i className="bi bi-bus-front text-muted display-1 mb-4"></i>
             <h2 className="fw-800">No Bus Assigned</h2>
             <p className="text-muted">Your child is not currently assigned to an active route.</p>
-            <button className="unified-btn-primary mt-4" onClick={() => window.location.reload()}>
+            <button className="unified-btn-primary mt-4 px-5" onClick={() => window.location.reload()}>
               Refresh Portal
             </button>
           </div>
         ) : (
           <div className="row g-4">
-            {/* MAP VIEW */}
-            <div className="col-lg-8">
+            {/* LEFT COLUMN: MAP */}
+            <div className="col-12 col-lg-8">
               <div className="map-container-glass">
                 <div className="map-header">
                   <span className="live-indicator">
                     <span className="dot"></span> LIVE TELEMETRY
                   </span>
                 </div>
+                {/* Ensure your BusMap component doesn't have a height of 100vh internally */}
                 <BusMap busLocation={busLocation} />
               </div>
             </div>
 
-            {/* SIDEBAR INFO */}
-            <div className="col-lg-4">
+            {/* RIGHT COLUMN: INFO CARDS */}
+            <div className="col-12 col-lg-4">
               <div className="row g-4">
-                <div className="col-12">
-                  <div className="unified-glass-card-mini">
+                <div className="col-12 col-md-6 col-lg-12">
+                  <div className="unified-glass-card-mini h-100">
                     <h6 className="fw-800 mb-3">
-                      <i className="bi bi-info-circle me-2"></i>Status Summary
+                      <i className="bi bi-info-circle me-2 text-primary"></i>Status Summary
                     </h6>
                     <div className="status-item">
                       <p className="mb-1 text-muted small">Current State</p>
@@ -141,15 +142,15 @@ const ParentDashboard = () => {
                   </div>
                 </div>
 
-                <div className="col-12">
-                  <div className="unified-glass-card-mini student-bg">
+                <div className="col-12 col-md-6 col-lg-12">
+                  <div className="unified-glass-card-mini student-bg h-100">
                     <h6 className="fw-800 mb-3">
-                      <i className="bi bi-shield-lock me-2"></i>Safety Protocol
+                      <i className="bi bi-shield-lock me-2 text-primary"></i>Safety Protocol
                     </h6>
-                    <p className="small text-muted">
-                      Encrypted data channel v4.2. Monitoring via high-frequency beacons.
+                    <p className="small text-muted mb-3">
+                      Encrypted data channel v4.2 active. High-frequency beacons monitoring.
                     </p>
-                    <div className="badge bg-white text-primary border-0 rounded-pill p-2 px-3 small fw-bold shadow-sm">
+                    <div className="badge bg-white text-primary border-0 rounded-pill p-2 px-3 small fw-bold shadow-sm d-inline-block">
                       Secure Connection
                     </div>
                   </div>

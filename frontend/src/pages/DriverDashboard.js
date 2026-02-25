@@ -86,9 +86,9 @@ export default function DriverDashboard() {
   };
 
   const submitFinal = async () => {
-    if(!window.confirm("Submit final manifest to Admin? This records today's data.")) return;
+    if(!window.confirm("Submit final manifest to Admin?")) return;
     await api.post(`/bookings/finalize/${busId}`);
-    alert("Data transmitted to Admin successfully.");
+    alert("Data transmitted successfully.");
     fetchBookings();
   };
 
@@ -105,8 +105,7 @@ export default function DriverDashboard() {
 
   const addStudentManually = async () => {
     if (!selectedStudent || !manualSeat || !manualPickup || !manualDrop)
-      return alert("Please fill all boarding fields");
-
+      return alert("Please fill all fields");
     try {
       await api.post(`/bookings/driver/add/${busId}`, {
         studentId: selectedStudent.value,
@@ -120,22 +119,21 @@ export default function DriverDashboard() {
     } catch { alert("Error adding student"); }
   };
 
-  if (!busId) return <div className="drv-loading-screen">Booting Driver Console...</div>;
+  if (!busId) return <div className="drv-loading-screen">Booting Console...</div>;
 
   return (
     <div className="drv-root">
       <div className="mesh-gradient-1"></div>
       
-      {/* 🚀 NAV */}
       <nav className="navbar-custom sticky-top">
-        <div className="container d-flex justify-content-between align-items-center py-3">
+        <div className="container d-flex justify-content-between align-items-center py-2 py-md-3">
           <div className="nav-logo">
             <div className="logo-dot"></div>
             KRMU <span className="text-blue">TRANSIT</span>
           </div>
-          <div className="d-flex align-items-center gap-3">
-            <div className="text-end d-none d-md-block">
-              <span className="drv-user-label">LOGGED IN AS</span>
+          <div className="d-flex align-items-center gap-2 gap-md-3">
+            <div className="text-end d-none d-sm-block">
+              <span className="drv-user-label">OPERATOR</span>
               <div className="fw-bold small">{driverName}</div>
             </div>
             <button className="btn-logout-glass" onClick={handleLogoutAction}>
@@ -145,25 +143,25 @@ export default function DriverDashboard() {
         </div>
       </nav>
 
-      <div className="container py-5 drv-content-layer">
+      <div className="container py-3 py-md-5 drv-content-layer">
         
         {/* 📊 TOP CONTROL STRIP */}
-        <div className="bento-header-drv mb-5">
-          <div className="row align-items-center g-4">
-            <div className="col-md-6 d-flex align-items-center gap-4">
+        <div className="bento-header-drv mb-4 mb-md-5">
+          <div className="row align-items-center g-3">
+            <div className="col-12 col-md-6 d-flex align-items-center gap-3 gap-md-4">
               <div className="drv-bus-sq">{busNo.replace(/\D/g, "") || "B"}</div>
               <div>
                 <span className="role-label-blue">System Active</span>
-                <h3 className="m-0 fw-800">{busNo}</h3>
+                <h3 className="m-0 fw-800 bus-title-responsive">{busNo}</h3>
               </div>
             </div>
-            <div className="col-md-6 d-flex justify-content-md-end gap-3">
+            <div className="col-12 col-md-6 d-grid d-md-flex justify-content-md-end gap-3">
               {sharing ? (
-                <button className="drv-btn-stop" onClick={stopTracking}>
+                <button className="drv-btn-stop w-100" onClick={stopTracking}>
                    <span className="pulse-dot"></span> STOP BROADCAST
                 </button>
               ) : (
-                <button className="drv-btn-start" onClick={startTracking}>
+                <button className="drv-btn-start w-100" onClick={startTracking}>
                   START TRIP
                 </button>
               )}
@@ -172,20 +170,20 @@ export default function DriverDashboard() {
         </div>
 
         {/* 📋 PARALLEL CONTAINERS */}
-        <div className="row g-4 mb-5">
-          {/* PENDING */}
-          <div className="col-lg-6">
+        <div className="row g-4 mb-4 mb-md-5">
+          <div className="col-12 col-lg-6">
             <div className="unified-glass-card h-100 border-top-warning">
-              <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
-                <h6 className="fw-800 m-0 text-dark uppercase">Pending Requests</h6>
+              <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center">
+                <h6 className="fw-800 m-0 text-dark">PENDING REQUESTS</h6>
                 <span className="count-badge bg-warning">{bookings.filter(b => b.status === "pending").length}</span>
               </div>
               <div className="drv-list-scroll">
+                {bookings.filter(b => b.status === "pending").length === 0 && <p className="text-center text-muted mt-4">No pending requests</p>}
                 {bookings.filter(b => b.status === "pending").map(b => (
                   <div key={b._id} className="drv-list-item-new">
-                    <div>
-                      <div className="fw-bold text-dark">{b.studentId?.name}</div>
-                      <div className="small text-muted">Seat {b.seatNumber} • {b.pickupStop}</div>
+                    <div className="flex-grow-1 me-2">
+                      <div className="fw-bold text-dark small-mobile-text">{b.studentId?.name}</div>
+                      <div className="text-muted extra-small-text">Seat {b.seatNumber} • {b.pickupStop}</div>
                     </div>
                     <button className="btn-approve-mini" onClick={() => updateStatus(b._id, "approved")}>APPROVE</button>
                   </div>
@@ -194,23 +192,23 @@ export default function DriverDashboard() {
             </div>
           </div>
 
-          {/* ON-BOARD */}
-          <div className="col-lg-6">
+          <div className="col-12 col-lg-6">
             <div className="unified-glass-card h-100 border-top-blue">
-              <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
-                <h6 className="fw-800 m-0 text-dark uppercase">On-Board Manifest</h6>
+              <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center">
+                <h6 className="fw-800 m-0 text-dark">ON-BOARD MANIFEST</h6>
                 <span className="count-badge bg-primary">{bookings.filter(b => b.status === "approved").length}</span>
               </div>
               <div className="drv-list-scroll">
+                {bookings.filter(b => b.status === "approved").length === 0 && <p className="text-center text-muted mt-4">No students on board</p>}
                 {bookings.filter(b => b.status === "approved").map(b => (
                   <div key={b._id} className={`drv-list-item-new ${b.attendance === 'present' ? 'attended-row' : b.attendance === 'absent' ? 'absent-row' : ''}`}>
-                    <div>
-                      <div className="fw-bold text-dark">{b.studentId?.name}</div>
-                      <div className="small text-muted">{b.pickupStop} → {b.dropStop}</div>
+                    <div className="flex-grow-1 me-2">
+                      <div className="fw-bold text-dark small-mobile-text">{b.studentId?.name}</div>
+                      <div className="text-muted extra-small-text text-truncate" style={{maxWidth: '120px'}}>{b.pickupStop} → {b.dropStop}</div>
                     </div>
-                    <div className="d-flex gap-2">
-                      <button className={`btn-att-pill p-btn ${b.attendance === 'present' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "present")}>Present</button>
-                      <button className={`btn-att-pill a-btn ${b.attendance === 'absent' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "absent")}>Absent</button>
+                    <div className="d-flex gap-1 gap-md-2">
+                      <button className={`btn-att-pill p-btn ${b.attendance === 'present' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "present")}>P</button>
+                      <button className={`btn-att-pill a-btn ${b.attendance === 'absent' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "absent")}>A</button>
                     </div>
                   </div>
                 ))}
@@ -219,24 +217,23 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* ☁️ SEND TO ADMIN BUTTON (POST-APPROVAL) */}
-        <div className="text-center mb-5">
-           <button className="btn-sync-cloud" onClick={submitFinal}>
-             <i className="bi bi-cloud-check-fill me-2"></i> SUBMIT TODAY'S DATA TO ADMIN
+        <div className="text-center mb-5 d-grid d-md-block px-3">
+           <button className="btn-sync-cloud w-100" style={{maxWidth: '500px'}} onClick={submitFinal}>
+             <i className="bi bi-cloud-check-fill me-2"></i> SUBMIT TO ADMIN
            </button>
         </div>
 
         {/* 📝 FULL WIDTH MANUAL ENTRY */}
         <div className="manual-entry-section-full shadow-lg">
-           <div className="manual-entry-header-dark p-4 d-flex align-items-center gap-3">
-              <div className="icon-circle-blue"><i className="bi bi-person-plus"></i></div>
+           <div className="manual-entry-header-dark p-3 p-md-4 d-flex align-items-center gap-3">
+              <div className="icon-circle-blue d-none d-sm-flex"><i className="bi bi-person-plus"></i></div>
               <div>
-                <h4 className="fw-800 m-0 text-white">Manual Boarding Registration</h4>
-                <p className="m-0 text-white-50 small">Register students boarding the bus without a prior booking.</p>
+                <h4 className="fw-800 m-0 text-white manual-title-res">Manual Boarding</h4>
+                <p className="m-0 text-white-50 small">Register students boarding now.</p>
               </div>
            </div>
            
-           <div className="p-5">
+           <div className="p-3 p-md-5">
              <div className="row flex-column g-4">
                 <div className="col-12">
                    <label className="manual-label-light">1. Identify Student</label>
@@ -246,15 +243,13 @@ export default function DriverDashboard() {
                       value={selectedStudent}
                       onChange={setSelectedStudent}
                       className="manual-async-select-custom"
-                      placeholder="Search by student name or email..."
+                      placeholder="Search name..."
                     />
                 </div>
-                
                 <div className="col-12">
                    <label className="manual-label-light">2. Assign Seat</label>
-                   <input type="number" className="manual-input-large" placeholder="Enter seat number" value={manualSeat} onChange={(e) => setManualSeat(e.target.value)} />
+                   <input type="number" className="manual-input-large" placeholder="Seat #" value={manualSeat} onChange={(e) => setManualSeat(e.target.value)} />
                 </div>
-
                 <div className="col-12">
                    <label className="manual-label-light">3. Pickup Location</label>
                    <select className="manual-input-large" value={manualPickup} onChange={(e) => setManualPickup(e.target.value)}>
@@ -262,7 +257,6 @@ export default function DriverDashboard() {
                      {routeStops.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
                    </select>
                 </div>
-
                 <div className="col-12">
                    <label className="manual-label-light">4. Drop Location</label>
                    <select className="manual-input-large" value={manualDrop} onChange={(e) => setManualDrop(e.target.value)}>
@@ -270,16 +264,14 @@ export default function DriverDashboard() {
                      {routeStops.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
                    </select>
                 </div>
-
-                <div className="col-12 pt-3">
-                   <button className="btn-manual-finalize" onClick={addStudentManually}>
-                      <i className="bi bi-check-circle-fill me-2"></i> REGISTER & BOARD STUDENT
+                <div className="col-12 pt-2">
+                   <button className="btn-manual-finalize w-100" onClick={addStudentManually}>
+                      <i className="bi bi-check-circle-fill me-2"></i> REGISTER & BOARD
                    </button>
                 </div>
              </div>
            </div>
         </div>
-
       </div>
     </div>
   );
