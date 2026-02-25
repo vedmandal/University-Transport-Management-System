@@ -4,7 +4,7 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
+/* Pages */
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -23,83 +23,75 @@ import ParentDashboard from "./pages/ParentDashboard";
 import AssignBus from "./pages/Admin/AssignBus";
 
 /* --------------------------------------------------------------------------
-   🛡️ PROTECTED ROUTE COMPONENT
-   -------------------------------------------------------------------------- */
+   🛡️ PROTECTED ROUTE (FINAL CLEAN VERSION)
+-------------------------------------------------------------------------- */
 const ProtectedRoute = ({ children, allowedRole }) => {
-  const { role } = useContext(AuthContext); // Access role from Context
-  const token = localStorage.getItem("token");
+  const { role, token } = useContext(AuthContext);
 
-  // 1. Check if token exists
+  // If not logged in
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Check if role matches (Normalization to lowercase for safety)
-  const currentRole = role?.toLowerCase();
-  const requiredRole = allowedRole?.toLowerCase();
-
-  if (allowedRole && currentRole !== requiredRole) {
+  // If role does not match
+  if (allowedRole && role?.toLowerCase() !== allowedRole.toLowerCase()) {
     return <Navigate to="/login" replace />;
   }
 
   return children;
 };
 
-
-
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <ToastContainer position="top-right" autoClose={3000} />
-        <Routes>
-          {/* 🏠 Landing Page */}
-          <Route path="/" element={<Home />} />
 
-          {/* 🔓 Public Routes */}
+        <Routes>
+          {/* 🏠 Public Pages */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* 🎓 Student Routes */}
-          <Route 
-            path="/student" 
+          {/* 🎓 Student */}
+          <Route
+            path="/student"
             element={
               <ProtectedRoute allowedRole="student">
                 <StudentDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          {/* 👨‍✈️ Driver Routes */}
-          <Route 
-            path="/driver" 
+          {/* 👨‍✈️ Driver */}
+          <Route
+            path="/driver"
             element={
               <ProtectedRoute allowedRole="driver">
                 <DriverDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
+          {/* 👨‍👩‍👧 Parent */}
+          <Route
+            path="/parent-dashboard"
+            element={
+              <ProtectedRoute allowedRole="parent">
+                <ParentDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-<Route 
-  path="/parent-dashboard" 
-  element={
-    <ProtectedRoute allowedRole="parent">
-      <ParentDashboard />
-    </ProtectedRoute>
-  } 
-/>
-
-          {/* 🛠️ Admin Routes */}
-          <Route 
-            path="/admin" 
+          {/* 🛠️ Admin */}
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute allowedRole="admin">
                 <AdminLayout />
               </ProtectedRoute>
             }
           >
-            {/* Redirect /admin to /admin/track so it's not a blank page */}
             <Route index element={<Navigate to="track" replace />} />
             <Route path="add-bus" element={<AddBus />} />
             <Route path="track" element={<AdminTrackBuses />} />
@@ -112,7 +104,7 @@ export default function App() {
             <Route path="parents" element={<ParentManagement />} />
           </Route>
 
-          {/* 🚪 Catch-all: Redirect unknown paths to Login */}
+          {/* ❌ Unknown Route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

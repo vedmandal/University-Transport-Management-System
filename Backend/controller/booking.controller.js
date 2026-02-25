@@ -1,5 +1,5 @@
 import bookingModel from "../models/booking.model.js";
-
+import mongoose from "mongoose";
 /* ======================================================
    BOOK SEAT (Student)
 ====================================================== */
@@ -252,23 +252,40 @@ export const submitFinalAttendance = async (req, res) => {
   try {
     const { busId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(busId)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid Bus ID",
+      });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    await bookingModel.updateMany(
+    const result = await bookingModel.updateMany(
       {
-        busId,
-        date: { $gte: today, $lt: tomorrow }
+        busId: new mongoose.Types.ObjectId(busId),
+        date: { $gte: today, $lt: tomorrow },
+        status: "approved",          // only approved bookings
+        finalized: false             // only not already finalized
       },
       { finalized: true }
     );
 
+    if (result.modifiedCount === 0) {
+      return res.status(400).send({
+        success: false,
+        message: "No approved bookings found to finalize",
+      });
+    }
+
     return res.status(200).send({
       success: true,
       message: "Attendance submitted to admin successfully",
+      finalizedCount: result.modifiedCount,
     });
 
   } catch (error) {
