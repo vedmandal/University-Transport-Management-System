@@ -27,23 +27,23 @@ export const protect = async (req, res, next) => {
   }
 };
 
-
-export const role = (role) => {
-    return (req, res, next) => {
-      try {
-        if (req.user.role !== role) {
-          return res.status(403).send({
-            success: false,
-            message: "Access denied"
-          });
-        }
-        next();
-      } catch (error) {
-        return res.status(500).send({
+export const role = (...allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).send({
           success: false,
-          message: "Authorization error"
+          message: "Access denied",
         });
       }
-    };
+
+      next();
+    } catch (error) {
+      return res.status(500).send({
+        success: false,
+        message: "Authorization error",
+      });
+    }
   };
+};
   

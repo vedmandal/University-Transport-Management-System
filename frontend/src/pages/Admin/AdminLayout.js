@@ -52,6 +52,19 @@ export default function AdminLayout() {
                   <span className="adm-nav-icon">🛣️</span> Add Route
                 </Link>
               </li>
+              <li className="adm-nav-item">
+                 <Link
+                  className={`adm-link ${isActive("/admin/parents")}`}
+                     to="/admin/parents"
+                       >
+                     <span className="adm-nav-icon">👪</span> Manage Parents
+                  </Link>
+                   </li>
+                   <li className="adm-nav-item">
+                    <Link className={`adm-link ${isActive("/admin/assign-bus")}`} to="/admin/assign-bus">
+                      <span className="adm-nav-icon">🎓</span> Assign Bus
+                      </Link>
+                    </li>
             </ul>
           </div>
 

@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.parent-root {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+    color: #1e293b;
+}
+
+/* Layering fix */
+.parent-content-layer {
+    position: relative;
+    z-index: 10;
+}
+
+/* Mesh Gradients */
+.mesh-gradient-1 {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    top: -150px;
+    left: -150px;
+    z-index: 1;
+}
+
+.mesh-gradient-2 {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(219, 234, 254, 0.4) 0%, transparent 70%);
+    bottom: -100px;
+    right: -100px;
+    z-index: 1;
+}
+
+/* Typography */
+.main-title-sm {
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: #1e293b;
+    font-size: 2.2rem;
+}
+
+.role-label-blue {
+    font-weight: 800;
+    color: #3b82f6;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.text-blue {
+    color: #3b82f6;
+}
+
+/* Stat Pills */
+.stat-pill-white {
+    background: white;
+    padding: 12px 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-pill-white.border-blue {
+    border-left: 4px solid #3b82f6;
+}
+
+.stat-pill-white .label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 1px;
+}
+
+.stat-pill-white .value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* Map Container */
+.map-container-glass {
+    background: white;
+    padding: 10px;
+    border-radius: 30px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.05);
+    height: 550px;
+    overflow: hidden;
+    position: relative;
+}
+/* Update this specific class in your ParentDashboard.css */
+.map-header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    /* This ensures it stays above the zoom/Mapbox controls */
+    z-index: 1010 !important; 
+    pointer-events: none; /* Allows clicks to pass through to the map if needed */
+}
+
+.live-indicator {
+    pointer-events: auto; /* Re-enables clicks specifically for the badge */
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Slightly deeper shadow for depth */
+}
+.map-header {
+    position: absolute;
+    top: 20px;
+    right: 20px; /* Changed from left to right */
+    left: auto;
+    z-index: 1010 !important;
+}
+
+.live-indicator .dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Sidebar Cards */
+.unified-glass-card-mini {
+    background: white;
+    border-radius: 24px;
+    padding: 25px;
+    border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+}
+
+.student-bg {
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.fw-800 { font-weight: 800; }
+
+/* Loader Style */
+.unified-loader {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+
+
+
+/* LOGOUT BUTTON GLASS STYLE */
+.btn-logout-glass {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid #e2e8f0;
+    color: #ef4444; /* Soft red for logout */
+    padding: 12px 20px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.btn-logout-glass:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+}
+
+/* ... existing styles ... */
+@media (max-width: 991px) {
+    .map-container-glass { height: 400px; }
+}

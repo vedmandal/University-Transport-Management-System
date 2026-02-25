@@ -27,6 +27,9 @@ export default function Login() {
         if (userRole === "student") navigate("/student");
         else if (userRole === "driver") navigate("/driver");
         else if (userRole === "admin") navigate("/admin/track");
+        else if (userRole === "parent") {
+          navigate("/parent-dashboard");
+        }
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid Credentials");

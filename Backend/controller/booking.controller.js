@@ -3,6 +3,8 @@ import bookingModel from "../models/booking.model.js";
 /* ======================================================
    BOOK SEAT (Student)
 ====================================================== */
+import userModel from "../models/user.model.js"; // 🔥 ADD THIS
+
 export const bookSeat = async (req, res) => {
   try {
     const { busId, seatNumber, pickupStop, dropStop } = req.body;
@@ -15,13 +17,36 @@ export const bookSeat = async (req, res) => {
       });
     }
 
+    /* ===========================================
+       🔐 NEW RESTRICTION LOGIC (IMPORTANT)
+    =========================================== */
+
+    const student = await userModel.findById(studentId);
+
+    if (!student.busId) {
+      return res.status(400).send({
+        success: false,
+        message: "No bus assigned to you by admin",
+      });
+    }
+
+    if (student.busId.toString() !== busId) {
+      return res.status(403).send({
+        success: false,
+        message: "You can only book seats in your assigned bus",
+      });
+    }
+
+    /* ===========================================
+       CONTINUE NORMAL BOOKING LOGIC
+    =========================================== */
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    /* 🔒 Check if seat already booked today */
     const seatBooked = await bookingModel.findOne({
       busId,
       seatNumber,
@@ -70,7 +95,6 @@ export const bookSeat = async (req, res) => {
     });
   }
 };
-
 /* ======================================================
    GET BOOKED SEATS (Seat Layout – Today Only)
 ====================================================== */

@@ -18,6 +18,9 @@ import AdminBusList from "./pages/Admin/AdminBustList";
 import AdminTrackBus from "./pages/Admin/AdminTrackBus";
 import AdminBusAttendance from "./pages/Admin/AdminAttendancePage";
 import Home from "./pages/Home";
+import ParentManagement from "./pages/Admin/ParentManagement";
+import ParentDashboard from "./pages/ParentDashboard";
+import AssignBus from "./pages/Admin/AssignBus";
 
 /* --------------------------------------------------------------------------
    🛡️ PROTECTED ROUTE COMPONENT
@@ -77,6 +80,16 @@ export default function App() {
             } 
           />
 
+
+<Route 
+  path="/parent-dashboard" 
+  element={
+    <ProtectedRoute allowedRole="parent">
+      <ParentDashboard />
+    </ProtectedRoute>
+  } 
+/>
+
           {/* 🛠️ Admin Routes */}
           <Route 
             path="/admin" 
@@ -95,6 +108,8 @@ export default function App() {
             <Route path="attendance/:busId" element={<AdminBusAttendance />} />
             <Route path="add-driver" element={<AddDriver />} />
             <Route path="add-route" element={<AddRoute />} />
+            <Route path="assign-bus" element={<AssignBus />} />
+            <Route path="parents" element={<ParentManagement />} />
           </Route>
 
           {/* 🚪 Catch-all: Redirect unknown paths to Login */}
