@@ -1,67 +1,97 @@
-/* ALL TEXT COLORS SET TO #1e293b (Dark Blue/Grey) FOR MAXIMUM VISIBILITY */
-.drv-page-container {
-    background-color: #f8fafc;
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.drv-root {
     min-height: 100vh;
-    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    position: relative;
     color: #1e293b;
-  }
-  
-  /* HEADER */
-  .drv-header { background: #ffffff; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
-  .drv-header-inner { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-  .drv-brand { display: flex; align-items: center; gap: 12px; }
-  .drv-logo-sq { background: #6366f1; color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-  .drv-brand-name { display: block; font-weight: 800; color: #1e293b; font-size: 1.1rem; line-height: 1.2; }
-  .drv-brand-tag { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
-  
-  .drv-header-actions { display: flex; align-items: center; gap: 20px; }
-  .drv-user-info { text-align: right; }
-  .drv-user-label { display: block; font-size: 0.6rem; color: #64748b; font-weight: 800; }
-  .drv-user-val { font-size: 0.9rem; font-weight: 800; color: #1e293b; }
-  .drv-logout-btn { background: #fff1f2; color: #e11d48; border: 1.5px solid #fecaca; padding: 6px 15px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
-  
-  /* STATUS ZONE */
-  .drv-status-banner { width: 100%; }
-  .drv-msg { padding: 12px; border-radius: 12px; font-weight: 700; text-align: center; font-size: 0.9rem; }
-  .drv-msg-active { background: #eef2ff; color: #6366f1; border: 1px solid #c7d2fe; }
-  .drv-msg-done { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  
-  /* BUS BAR */
-  .drv-control-bar { background: white; border-radius: 18px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #6366f1; }
-  .drv-bus-sq-dark { width: 45px; height: 45px; background: #1e293b; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; }
-  .drv-meta-label { display: block; font-size: 0.65rem; color: #94a3b8; font-weight: 800; }
-  .drv-meta-val { font-weight: 900; color: #1e293b; font-size: 1.1rem; }
-  
-  .drv-btn-start { background: #6366f1; color: white; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; }
-  .drv-btn-stop { background: #ef4444; color: white; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; }
-  
-  /* LIST CARDS */
-  .drv-list-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #eef2f8; }
-  .drv-card-title { padding: 12px; font-weight: 800; font-size: 0.75rem; text-align: center; }
-  .yellow-head { background: #fffcf0; color: #854d0e; }
-  .blue-head { background: #f8faff; color: #1e40af; }
-  .drv-card-scroll { height: 320px; overflow-y: auto; padding: 15px; }
-  
-  .drv-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 10px; }
-  .row-active { background: #f0fdf4; border-color: #bbf7d0; }
-  .drv-student-name { display: block; font-weight: 800; color: #1e293b; font-size: 0.95rem; }
-  .drv-seat-no, .drv-route-info { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-  
-  .drv-btn-accept { background: #6366f1; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
-  .drv-btn-mark { background: #f1f5f9; color: #1e293b; border: 1px solid #ddd; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; }
-  .mark-on { background: #10b981; color: white; border: none; }
-  
-  /* SYNC BUTTON */
-  .drv-btn-sync { width: 100%; padding: 16px; background: white; color: #6366f1; border: 2px solid #6366f1; border-radius: 15px; font-weight: 800; cursor: pointer; }
-  
-  /* FORM CARD */
-  .drv-form-card { background: white; border-radius: 22px; overflow: hidden; width: 100% !important; }
-  .drv-form-header { background: #1e293b; color: white; padding: 20px; font-weight: 800; font-size: 1.1rem; }
-  .drv-form-content { padding: 30px; }
-  .drv-form-group { margin-bottom: 1.5rem; width: 100% !important; }
-  .drv-label { display: block; font-size: 0.8rem; font-weight: 800; color: #64748b; margin-bottom: 8px; }
-  
-  .drv-form-input { width: 100% !important; height: 52px; border: 2px solid #f1f5f9; background: #f8fafc; border-radius: 12px; padding: 0 15px; color: #1e293b; font-weight: 600; display: block; }
-  .drv-btn-submit { width: 100%; padding: 18px; background: #6366f1; color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; }
-  
-  .drv-loading-screen { display: flex; align-items: center; justify-content: center; height: 100vh; font-weight: 800; color: #6366f1; }
+}
+
+/* Header & Bento Styling */
+.bento-header-drv {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+}
+
+.drv-bus-sq {
+    width: 65px; height: 65px;
+    background: #1e293b; color: white;
+    border-radius: 18px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 900;
+}
+
+/* List Containers */
+.border-top-warning { border-top: 4px solid #f59e0b !important; }
+.border-top-blue { border-top: 4px solid #3b82f6 !important; }
+
+.count-badge {
+    padding: 5px 12px; border-radius: 20px;
+    color: white; font-size: 0.75rem; font-weight: 800;
+}
+
+.drv-list-scroll { height: 400px; overflow-y: auto; padding: 20px; }
+
+/* Attendance Row States */
+.attended-row { background: #f0fdf4 !important; border-left: 5px solid #22c55e !important; }
+.absent-row { background: #fff1f2 !important; border-left: 5px solid #ef4444 !important; }
+
+.btn-att-pill {
+    padding: 6px 15px; border-radius: 100px;
+    font-size: 0.75rem; font-weight: 800; border: 1.5px solid #e2e8f0;
+    background: white; transition: 0.3s;
+}
+
+.p-btn:hover, .p-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
+.a-btn:hover, .a-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
+
+/* Cloud Sync Button */
+.btn-sync-cloud {
+    background: #1e293b; color: white; border: none;
+    padding: 16px 40px; border-radius: 100px;
+    font-weight: 800; transition: 0.3s;
+}
+.btn-sync-cloud:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(30, 41, 59, 0.2); }
+
+/* 📝 MANUAL ENTRY FULL WIDTH */
+.manual-entry-section-full {
+    background: #ffffff; border-radius: 30px;
+    overflow: hidden; border: 1px solid #e2e8f0;
+}
+
+.manual-entry-header-dark { background: #1e293b; }
+.icon-circle-blue {
+    width: 50px; height: 50px; background: #3b82f6;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; color: white; font-size: 1.5rem;
+}
+
+.manual-label-light {
+    display: block; font-size: 0.8rem; font-weight: 800;
+    color: #64748b; text-transform: uppercase; margin-bottom: 12px;
+}
+
+.manual-input-large {
+    width: 100%; height: 60px; padding: 0 25px;
+    border-radius: 15px; border: 2px solid #f1f5f9;
+    background: #f8fafc; font-weight: 700; color: #1e293b;
+    transition: 0.3s; font-size: 1.05rem;
+}
+
+.manual-input-large:focus { outline: none; border-color: #3b82f6; background: white; }
+
+.btn-manual-finalize {
+    width: 100%; padding: 20px; border-radius: 18px;
+    background: #3b82f6; color: white; border: none;
+    font-weight: 800; font-size: 1.1rem; transition: 0.3s;
+}
+
+.btn-manual-finalize:hover { background: #2563eb; transform: scale(1.01); }
+
+/* Tracking Buttons */
+.drv-btn-start { background: #3b82f6; color: white; border: none; padding: 12px 30px; border-radius: 15px; font-weight: 800; }
+.drv-btn-stop { background: #fff1f2; color: #ef4444; border: 2px solid #fecaca; padding: 12px 30px; border-radius: 15px; font-weight: 800; }
