@@ -99,17 +99,19 @@ router.get(
    MICROSOFT OAUTH
 ========================= */
 
+//* =========================
+
+
 // Redirect to Microsoft
 router.get(
   "/microsoft",
   passport.authenticate("microsoft")
 );
 
-// Microsoft callback
+// Microsoft callback (FIXED)
 router.get(
   "/microsoft/callback",
   passport.authenticate("microsoft", {
-    session: false,
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
   }),
   (req, res) => {
@@ -120,5 +122,4 @@ router.get(
     );
   }
 );
-
 export default router;

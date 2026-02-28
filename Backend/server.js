@@ -22,76 +22,83 @@ import { socketHandler } from "./socket.js";
 const app = express();
 const server = http.createServer(app);
 
-// Connect Database
+// ========================
+// DATABASE
+// ========================
 ConnectDb();
 
-/* =========================
-   CORS CONFIGURATION
-========================= */
-
+// ========================
+// CORS
+// ========================
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://university-transport-management-sys.vercel.app",
-  "https://university-transport-management-system-qjbtg8zoa.vercel.app"
+  "https://university-transport-management-system-qjbtg8zoa.vercel.app",
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("CORS not allowed"), false);
+      }
+    },
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-/* =========================
-   SESSION (REQUIRED FOR MICROSOFT OIDC)
-========================= */
-
+// ========================
+// SESSION (REQUIRED FOR MICROSOFT OIDC)
+// ========================
 app.use(
   session({
+    name: "connect.sid",
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: true, // required for HTTPS (Render)
+      sameSite: "none", // required for cross-site (Vercel <-> Render)
+    },
   })
 );
 
-/* =========================
-   PASSPORT INITIALIZATION
-========================= */
-
+// ========================
+// PASSPORT
+// ========================
 app.use(passport.initialize());
 app.use(passport.session());
 
-/* =========================
-   ROUTES
-========================= */
-
+// ========================
+// ROUTES
+// ========================
 app.use("/api/auth", authRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
 
-/* =========================
-   SOCKET.IO
-========================= */
-
+// ========================
+// SOCKET.IO
+// ========================
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
 socketHandler(io);
 
-/* =========================
-   START SERVER
-========================= */
-
+// ========================
+// START SERVER
+// ========================
 const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {
