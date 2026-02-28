@@ -87,9 +87,7 @@ passport.use(
           return done(null, false);
         }
 
-        if (!email.endsWith("@krmu.edu.in")) {
-          return done(null, false);
-        }
+       
 
         let user = await userModel.findOne({ email });
 
