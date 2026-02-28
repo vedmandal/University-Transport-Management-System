@@ -1,21 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config(); // MUST be first
 
-
-
-console.log("ENV CHECK:", process.env.GOOGLE_CLIENT_ID);
-
 import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
+import session from "express-session";
 import passport from "passport";
 
 // Load passport strategies AFTER dotenv
-import "./config/passport.js" 
+import "./config/passport.js";
 
 import ConnectDb from "./Database/Db.js";
-import authRoutes from "./routes/auth.route.js"; 
+import authRoutes from "./routes/auth.route.js";
 import routeRoutes from "./routes/routes.route.js";
 import busRoutes from "./routes/bus.route.js";
 import bookingRoutes from "./routes/booking.route.js";
@@ -28,7 +25,10 @@ const server = http.createServer(app);
 // Connect Database
 ConnectDb();
 
-// CORS Configuration
+/* =========================
+   CORS CONFIGURATION
+========================= */
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -45,17 +45,39 @@ app.use(
 
 app.use(express.json());
 
-// Initialize Passport
-app.use(passport.initialize());
+/* =========================
+   SESSION (REQUIRED FOR MICROSOFT OIDC)
+========================= */
 
-// Routes
+app.use(
+  session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+/* =========================
+   PASSPORT INITIALIZATION
+========================= */
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+/* =========================
+   ROUTES
+========================= */
+
 app.use("/api/auth", authRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
 
-// Socket.IO
+/* =========================
+   SOCKET.IO
+========================= */
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -66,10 +88,16 @@ const io = new Server(server, {
 
 socketHandler(io);
 
-// Start Server
-const PORT = process.env.PORT || 8080
+/* =========================
+   START SERVER
+========================= */
+
+const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log("Google Client ID loaded:", process.env.GOOGLE_CLIENT_ID ? "YES" : "NO");
+  console.log(
+    "Google Client ID loaded:",
+    process.env.GOOGLE_CLIENT_ID ? "YES" : "NO"
+  );
 });
