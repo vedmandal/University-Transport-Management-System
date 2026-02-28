@@ -56,7 +56,6 @@ passport.use(
 /* =========================
    MICROSOFT STRATEGY
 ========================= */
-
 passport.use(
   "microsoft",
   new OIDCStrategy(
@@ -66,17 +65,29 @@ passport.use(
       responseType: "code",
       responseMode: "query",
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
-      allowHttpForRedirectUrl: true, // allows localhost in dev
+      allowHttpForRedirectUrl: true,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
       scope: ["profile", "email", "openid"],
+
+      // 🔥 ADD THESE (IMPORTANT FOR PRODUCTION)
+      validateIssuer: false,
       passReqToCallback: false,
+      loggingLevel: "info",
     },
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
+        // 🔥 Safe email extraction (avoid crash)
         const email =
-          profile._json.preferred_username || profile._json.email;
+          profile?.preferred_username ||
+          profile?.email ||
+          profile?._json?.preferred_username ||
+          profile?._json?.email;
 
-        if (!email?.endsWith("@krmu.edu.in")) {
+        if (!email) {
+          return done(null, false);
+        }
+
+        if (!email.endsWith("@krmu.edu.in")) {
           return done(null, false);
         }
 
@@ -103,6 +114,7 @@ passport.use(
 
         return done(null, { token, role: user.role });
       } catch (err) {
+        console.error("Microsoft Strategy Error:", err);
         return done(err, null);
       }
     }
