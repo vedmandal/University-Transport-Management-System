@@ -58,46 +58,42 @@ passport.use(
 ========================= */
 passport.use(
   "microsoft",
-  new OIDCStrategy(
+  new OIDCStrategy( 
     {
       identityMetadata: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration`,
       clientID: process.env.MICROSOFT_CLIENT_ID,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
       responseType: "code",
       responseMode: "query",
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
       allowHttpForRedirectUrl: true,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
       scope: ["profile", "email", "openid"],
-
-      // 🔥 ADD THESE (IMPORTANT FOR PRODUCTION)
       validateIssuer: false,
       passReqToCallback: false,
-      loggingLevel: "info",
+      loggingLevel: "warn",
     },
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
-        // 🔥 Safe email extraction (avoid crash)
+        console.log("Microsoft profile received");
+
         const email =
           profile?.preferred_username ||
+          profile?.upn ||
           profile?.email ||
           profile?._json?.preferred_username ||
+          profile?._json?.upn ||
           profile?._json?.email;
 
         if (!email) {
-          return done(null, false);
+          console.log("No email found in profile");
+          return done(new Error("Email not found"), null);
         }
-
-       
 
         let user = await userModel.findOne({ email });
 
-        if (user) {
-          if (user.role === "parent") {
-            return done(null, false);
-          }
-        } else {
+        if (!user) {
           user = await userModel.create({
-            name: profile.displayName,
+            name: profile.displayName || "Microsoft User",
             email,
             role: "student",
             provider: "microsoft",
@@ -111,6 +107,7 @@ passport.use(
         );
 
         return done(null, { token, role: user.role });
+
       } catch (err) {
         console.error("Microsoft Strategy Error:", err);
         return done(err, null);
