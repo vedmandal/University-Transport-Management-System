@@ -21,6 +21,7 @@ import Home from "./pages/Home";
 import ParentManagement from "./pages/Admin/ParentManagement";
 import ParentDashboard from "./pages/ParentDashboard";
 import AssignBus from "./pages/Admin/AssignBus";
+import OAuthSuccess from "./pages/OAuthSuccess";
 
 /* --------------------------------------------------------------------------
    🛡️ PROTECTED ROUTE (FINAL CLEAN VERSION)
@@ -82,6 +83,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
 
           {/* 🛠️ Admin */}
           <Route

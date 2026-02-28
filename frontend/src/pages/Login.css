@@ -162,6 +162,53 @@
     font-weight: 500;
 }
 
+.oauth-divider {
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+    color: #aaa;
+    font-size: 14px;
+  }
+  
+  .oauth-divider span {
+    background: white;
+    padding: 0 10px;
+  }
+  
+  .google-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background-color: #db4437;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+  
+  .google-btn:hover {
+    background-color: #b23121;
+  }
+  
+  .microsoft-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background-color: #0078D4;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+  
+  .microsoft-btn:hover {
+    background-color: #005ea6;
+  }
+
 @media (max-width: 480px) {
     .unified-glass-card { padding: 40px 25px; border-radius: 30px; }
 }

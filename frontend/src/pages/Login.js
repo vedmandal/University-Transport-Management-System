@@ -13,6 +13,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const BACKEND_URL =
+    process.env.REACT_APP_BACKEND_URL ||
+    "http://localhost:8080";
+
   const submit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -20,17 +24,17 @@ export default function Login() {
 
     try {
       const res = await api.post("/auth/login", { email, password });
-      if (login) {
-        login(res.data.token, res.data.role);
-        toast.success("Welcome Back!");
-        const userRole = res.data.role.toLowerCase();
-        if (userRole === "student") navigate("/student");
-        else if (userRole === "driver") navigate("/driver");
-        else if (userRole === "admin") navigate("/admin/track");
-        else if (userRole === "parent") {
-          navigate("/parent-dashboard");
-        }
-      }
+
+      login(res.data.token, res.data.role);
+      toast.success("Welcome Back!");
+
+      const userRole = res.data.role.toLowerCase();
+
+      if (userRole === "student") navigate("/student");
+      else if (userRole === "driver") navigate("/driver");
+      else if (userRole === "admin") navigate("/admin/track");
+      else if (userRole === "parent") navigate("/parent-dashboard");
+
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid Credentials");
     } finally {
@@ -38,20 +42,23 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${BACKEND_URL}/api/auth/google`;
+  };
+
+  const handleMicrosoftLogin = () => {
+    window.location.href = `${BACKEND_URL}/api/auth/microsoft`;
+  };
+
   return (
     <div className="unified-auth-root">
-      {/* Mesh Background Blurs */}
       <div className="mesh-gradient-1"></div>
       <div className="mesh-gradient-2"></div>
 
       <div className="unified-glass-card">
         <div className="auth-header-content text-center">
           <div className="auth-icon-box">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
-               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeOpacity="0"/>
-               <circle cx="12" cy="12" r="10" />
-               <path d="M12 8v4l3 3" />
-            </svg>
+            <h2 style={{ margin: 0 }}>🚍</h2>
           </div>
           <h2 className="welcome-title">Welcome Back</h2>
           <p className="welcome-subtitle">KRMU Transit Dashboard</p>
@@ -59,7 +66,6 @@ export default function Login() {
 
         <form onSubmit={submit} className="unified-auth-form mt-4">
           <div className="unified-input-group">
-            <i className="bi bi-envelope-at"></i>
             <input
               type="email"
               placeholder="name@krmu.edu.in"
@@ -70,7 +76,6 @@ export default function Login() {
           </div>
 
           <div className="unified-input-group mt-3">
-            <i className="bi bi-shield-lock"></i>
             <input
               type="password"
               placeholder="Account Password"
@@ -80,13 +85,42 @@ export default function Login() {
             />
           </div>
 
-          <button type="submit" className="unified-btn-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="unified-btn-primary"
+            disabled={loading}
+          >
             {loading ? "Verifying Credentials..." : "Log in to Portal"}
           </button>
         </form>
 
+        {/* OAuth Divider */}
+        <div className="oauth-divider">
+          <span>OR</span>
+        </div>
+
+        {/* Google Login */}
+        <button
+          type="button"
+          className="google-btn"
+          onClick={handleGoogleLogin}
+        >
+          Continue with Google
+        </button>
+
+        {/* Microsoft Login */}
+        <button
+          type="button"
+          className="microsoft-btn"
+          onClick={handleMicrosoftLogin}
+        >
+          Continue with Microsoft Outlook
+        </button>
+
         <div className="unified-auth-footer">
-          <Link to="/forgot" className="unified-link-primary">Forgot Password?</Link>
+          <Link to="/forgot" className="unified-link-primary">
+            Forgot Password?
+          </Link>
           <div className="mt-4 unified-signup-text">
             Don't have an account? <Link to="/register">Sign Up here</Link>
           </div>

@@ -1,58 +1,75 @@
-import express from "express"
-import dotenv from 'dotenv'
-import http from "http"
-import ConnectDb from "./Database/Db.js";
-import authRoutes from "./routes/auth.route.js";
-import routeRoutes from "./routes/routes.route.js";
-import busRoutes from "./routes/bus.route.js"
+import dotenv from "dotenv";
+dotenv.config(); // MUST be first
 
+
+
+console.log("ENV CHECK:", process.env.GOOGLE_CLIENT_ID);
+
+import express from "express";
+import http from "http";
+import cors from "cors";
+import { Server } from "socket.io";
+import passport from "passport";
+
+// Load passport strategies AFTER dotenv
+import "./config/passport.js" 
+
+import ConnectDb from "./Database/Db.js";
+import authRoutes from "./routes/auth.route.js"; 
+import routeRoutes from "./routes/routes.route.js";
+import busRoutes from "./routes/bus.route.js";
 import bookingRoutes from "./routes/booking.route.js";
 import tripRoutes from "./routes/trip.route.js";
-import cors from "cors"
-import {Server} from "socket.io"
 import { socketHandler } from "./socket.js";
-dotenv.config();
-const app=express();
+
+const app = express();
+const server = http.createServer(app);
+
+// Connect Database
 ConnectDb();
-const server=http.createServer(app);
+
+// CORS Configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://university-transport-management-sys.vercel.app",
   "https://university-transport-management-system-qjbtg8zoa.vercel.app"
 ];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+// Initialize Passport
+app.use(passport.initialize());
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/bus", busRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/trips", tripRoutes);
+
+// Socket.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
-  socketHandler(io);
 
-  app.use(cors({
-    origin: allowedOrigins,
-    credentials: true
-}));
-app.use(express.json());
+socketHandler(io);
 
+// Start Server
+const PORT = process.env.PORT || 8080
 
-app.use("/api/auth", authRoutes);
-app.use("/api/routes", routeRoutes);
-app.use("/api/bus",busRoutes)
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/trips", tripRoutes);
-
-
-
-
-
-
-
-
-
-
-
-server.listen(process.env.PORT,()=>{
-    console.log(`server is working on port ${process.env.PORT}`);
-})
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log("Google Client ID loaded:", process.env.GOOGLE_CLIENT_ID ? "YES" : "NO");
+});
