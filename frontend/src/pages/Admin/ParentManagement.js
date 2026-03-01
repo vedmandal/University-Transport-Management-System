@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
 import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
@@ -24,18 +24,26 @@ export default function ParentManagement() {
     fetchParents();
   }, []);
 
-  const loadStudentOptions = async (inputValue) => {
-    if (!inputValue) return [];
+  // Use useCallback to prevent function recreation on every render
+  const loadStudentOptions = useCallback(async (inputValue) => {
+    if (!inputValue || inputValue.length < 2) return [];
+
     try {
+      // Added query parameter to match your backend controller
       const res = await api.get(`/auth/students/search?query=${inputValue}`);
-      return res.data.students.map((s) => ({
+      
+      // Safety check for data structure
+      const students = res.data.students || [];
+      
+      return students.map((s) => ({
         value: s._id,
         label: `${s.name} (${s.email})`,
       }));
-    } catch {
+    } catch (err) {
+      console.error("Student search failed:", err);
       return [];
     }
-  };
+  }, []);
 
   const handleCreateParent = async () => {
     if (!parentName || !parentEmail || !selectedStudent) {
@@ -122,12 +130,14 @@ export default function ParentManagement() {
               <div className="mb-4">
                 <label className="form-label-custom">Link to Student</label>
                 <AsyncSelect
-                  cacheOptions
+                  key="student-search-select" // Added key to force refresh
+                  cacheOptions={false} // Set to false to ensure it triggers network call while debugging
                   styles={customSelectStyles}
                   loadOptions={loadStudentOptions}
                   value={selectedStudent}
                   onChange={setSelectedStudent}
                   placeholder="Search by name/email..."
+                  noOptionsMessage={() => "No students found"}
                 />
                 <div className="form-info-tag mt-2">
                    <i className="bi bi-info-circle me-1"></i>
@@ -179,7 +189,7 @@ export default function ParentManagement() {
                           <td>
                             <div className="d-flex align-items-center">
                               <div className="avatar-initials me-3">
-                                {parent.name.charAt(0)}
+                                {parent.name?.charAt(0) || "?"}
                               </div>
                               <div>
                                 <div className="fw-bold text-dark">{parent.name}</div>
