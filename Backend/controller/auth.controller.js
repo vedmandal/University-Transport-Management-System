@@ -126,7 +126,6 @@ export const getAllDrivers = async (req, res) => {
       res.status(500).json({ message: "Search failed" });
     }
   };
-  
   export const createParent = async (req, res) => {
     try {
       const { name, email, studentId } = req.body;
@@ -147,12 +146,11 @@ export const getAllDrivers = async (req, res) => {
       }
       
       if (student.parentId) {
-        return res.status(400).json({ message: "Student already linked to another parent" });
+        return res.status(400).json({ message: "Student is already linked to a parent" });
       }
   
       // 2. Generate Credentials
-      // Generate a 8-character hex password (e.g., 'f3a2b1c0')
-      const autoPassword = crypto.randomBytes(4).toString("hex"); 
+      const autoPassword = crypto.randomBytes(4).toString("hex"); // e.g., 'a1b2c3d4'
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(autoPassword, salt);
   
@@ -162,74 +160,69 @@ export const getAllDrivers = async (req, res) => {
         email,
         password: hashedPassword,
         role: "parent",
-        provider: "local"
       });
   
-      // Link the student to this new parent
       student.parentId = parent._id;
       await student.save();
   
-      // 4. Configure Nodemailer for Brevo (Fixing the Timeout)
-      const transporter = nodemailer.createTransport({
-        host: "smtp-relay.brevo.com",
-        port: 587, // Standard for Render/Cloud
-        secure: false, // Must be false for 587
-        auth: {
-          user: process.env.BREVO_USER, // Your Brevo SMTP Email
-          pass: process.env.BREVO_PASS, // Your Brevo SMTP Key
+      // 4. Send Email via Brevo HTTP API (Bypasses SMTP Timeout)
+      const brevoData = {
+        sender: { 
+          name: "KRMU Transit Admin", 
+          email: "mandalved643@gmail.com" // Must match your Verified Sender exactly
         },
-        // Added timeouts to prevent the ETIMEDOUT error
-        connectionTimeout: 15000, 
-        greetingTimeout: 15000,
-        socketTimeout: 15000,
-      });
-  
-      const mailOptions = {
-        // IMPORTANT: Use your verified Brevo email here
-        from: `"KRMU Transit Admin" <${process.env.BREVO_USER}>`,
-        to: email,
-        subject: "Your KRMU Parent Portal Account",
-        html: `
-          <div style="font-family: sans-serif; max-width: 500px; padding: 30px; border: 1px solid #e2e8f0; border-radius: 24px;">
+        to: [{ email: email, name: name }],
+        subject: "Your KRMU Parent Portal Account Credentials",
+        htmlContent: `
+          <div style="font-family: sans-serif; max-width: 500px; padding: 25px; border: 1px solid #e2e8f0; border-radius: 20px;">
             <h2 style="color: #3b82f6; margin-top: 0;">Welcome to KRMU Transit</h2>
             <p>An account has been created for you to track <strong>${student.name}</strong>.</p>
             
-            <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
-              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Login Password</p>
-              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 3px; font-family: monospace;">${autoPassword}</h1>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
+              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Temporary Password</p>
+              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 4px; font-family: monospace;">${autoPassword}</h1>
             </div>
   
-            <p style="color: #ef4444; font-size: 13px;"><strong>Note:</strong> Please change this password immediately after your first login via the Settings page.</p>
+            <p style="color: #64748b; font-size: 13px;">Please use this password to log in at the portal. You should update your password immediately after logging in.</p>
             
-            <div style="margin-top: 30px; text-align: center;">
+            <div style="margin-top: 25px; text-align: center;">
               <a href="https://university-transport-management-system-frontend.onrender.com/login" 
-                 style="background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">
+                 style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">
                  Login to Dashboard
               </a>
             </div>
           </div>
-        `,
+        `
       };
   
       
   
-      // 5. Attempt to send email
       try {
-        await transporter.sendMail(mailOptions);
+        // Calling Brevo API over HTTPS (Port 443) - This avoids the ETIMEDOUT error
+        await axios.post('https://api.brevo.com/v3/smtp/email', brevoData, {
+          headers: {
+            'api-key': process.env.BREVO_PASS, // Your xsmtpsib-... key
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+  
         return res.status(201).json({ 
           message: "Parent created and credentials emailed successfully." 
         });
-      } catch (mailError) {
-        console.error("Brevo SMTP Error:", mailError);
-        // Parent is already created in DB, so we return 201 but with a warning
+  
+      } catch (apiError) {
+        console.error("Brevo API Error Details:", apiError.response?.data || apiError.message);
+        
+        // We return 201 because the user WAS created in the DB, just the email failed.
         return res.status(201).json({ 
-          message: "Parent created, but email failed to send. Please provide password manually.",
+          message: "Parent created, but email delivery failed. Please provide password manually.",
           tempPassword: autoPassword 
         });
       }
   
     } catch (error) {
-      console.error("General Create Parent Error:", error);
+      console.error("General Controller Error:", error);
       res.status(500).json({ message: "Internal server error during parent creation." });
     }
   };
