@@ -12,6 +12,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const[count,setcount]=useState(0);
 
   const BACKEND_URL =
     process.env.REACT_APP_BACKEND_URL ||
@@ -63,6 +64,7 @@ export default function Login() {
           <h2 className="welcome-title">Welcome Back</h2>
           <p className="welcome-subtitle">KRMU Transit Dashboard</p>
         </div>
+        <div className="button"> {count}</div>
 
         <form onSubmit={submit} className="unified-auth-form mt-4">
           <div className="unified-input-group">
@@ -123,6 +125,7 @@ export default function Login() {
             <span>Outlook</span>
           </button>
         </div>
+        <button  onClick={setcount(...count,count+1)}type="button"> click</button>
 
         <div className="unified-auth-footer">
           <Link to="/forgot" className="unified-link-primary">
