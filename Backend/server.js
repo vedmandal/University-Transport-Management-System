@@ -23,10 +23,14 @@ const server = http.createServer(app);
 
 ConnectDb();
 
-/* ================= TRUST PROXY (RENDER) ================= */
+/* =========================
+   TRUST PROXY (Render)
+========================= */
 app.set("trust proxy", 1);
 
-/* ================= CORS ================= */
+/* =========================
+   CORS
+========================= */
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -43,7 +47,9 @@ app.use(
 
 app.use(express.json());
 
-/* ================= SESSION (ONLY FOR OIDC STATE) ================= */
+/* =========================
+   SESSION (ONLY FOR OIDC STATE)
+========================= */
 app.use(
   session({
     name: "connect.sid",
@@ -53,25 +59,29 @@ app.use(
     proxy: true,
     cookie: {
       secure: true,
-      httpOnly: true,
       sameSite: "none",
-      maxAge: 1000 * 60 * 15, // 15 minutes
+      httpOnly: true,
     },
   })
 );
 
-/* ================= PASSPORT ================= */
-app.use(passport.initialize()); 
-// ❌ DO NOT USE passport.session()
+/* =========================
+   PASSPORT
+========================= */
+app.use(passport.initialize());
 
-/* ================= ROUTES ================= */
+/* =========================
+   ROUTES
+========================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
 
-/* ================= SOCKET ================= */
+/* =========================
+   SOCKET
+========================= */
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -81,9 +91,8 @@ const io = new Server(server, {
 
 socketHandler(io);
 
-/* ================= START ================= */
 const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port", PORT);
 });
