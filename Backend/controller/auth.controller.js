@@ -226,13 +226,16 @@ export const getAllDrivers = async (req, res) => {
       res.status(500).json({ message: "Internal server error during parent creation." });
     }
   };
+
+
   export const changePassword = async (req, res) => {
     try {
       const { oldPassword, newPassword } = req.body;
       const userId = req.user.id; // Derived from your protect/auth middleware
   
       // 1. Find user
-      const user = await userModel.findById(userId);
+     // 1. Find user AND explicitly include the hidden password field
+     const user = await userModel.findById(userId).select("+password");
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
