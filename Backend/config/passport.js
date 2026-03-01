@@ -10,7 +10,6 @@ import userModel from "../models/user.model.js";
 /* ================= GOOGLE ================= */
 
 passport.use(
-  "google",
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -62,7 +61,7 @@ passport.use(
       responseMode: "query",
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
       scope: ["openid", "profile", "email"],
-      validateIssuer: false,
+      validateIssuer: false,   // important for Azure v2
       allowHttpForRedirectUrl: false,
       passReqToCallback: false,
     },

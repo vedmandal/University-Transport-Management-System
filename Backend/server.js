@@ -24,7 +24,7 @@ const server = http.createServer(app);
 ConnectDb();
 
 /* =========================
-   TRUST PROXY (Render)
+   TRUST PROXY (RENDER FIX)
 ========================= */
 app.set("trust proxy", 1);
 
@@ -33,7 +33,6 @@ app.set("trust proxy", 1);
 ========================= */
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://localhost:3001",
   "https://university-transport-management-sys.vercel.app",
   "https://university-transport-management-system-qjbtg8zoa.vercel.app",
 ];
@@ -48,7 +47,7 @@ app.use(
 app.use(express.json());
 
 /* =========================
-   SESSION (ONLY FOR OIDC STATE)
+   SESSION (ONLY FOR MICROSOFT STATE)
 ========================= */
 app.use(
   session({
@@ -58,8 +57,8 @@ app.use(
     saveUninitialized: false,
     proxy: true,
     cookie: {
-      secure: true,
-      sameSite: "none",
+      secure: true,        // REQUIRED on Render
+      sameSite: "none",    // REQUIRED for Vercel <-> Render
       httpOnly: true,
     },
   })
