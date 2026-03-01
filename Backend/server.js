@@ -27,7 +27,8 @@ const server = http.createServer(app);
 ConnectDb();
 
 /* ========================
-   TRUST PROXY (REQUIRED FOR RENDER)
+   TRUST PROXY (ONLY ONCE)
+   Required for Render HTTPS
 ======================== */
 app.set("trust proxy", 1);
 
@@ -48,9 +49,9 @@ app.use(
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
-      } else {
-        return callback(new Error("CORS not allowed"), false);
       }
+
+      return callback(new Error("CORS not allowed"), false);
     },
     credentials: true,
   })
@@ -59,10 +60,8 @@ app.use(
 app.use(express.json());
 
 /* ========================
-   SESSION (FIXED FOR PRODUCTION)
+   SESSION (CRITICAL FOR MICROSOFT OIDC)
 ======================== */
-app.set("trust proxy", 1);
-
 app.use(
   session({
     name: "connect.sid",
@@ -70,10 +69,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     proxy: true,
+    rolling: true, // refresh cookie
     cookie: {
-      secure: true,       // required for HTTPS (Render)
+      secure: true,        // MUST be true on Render (HTTPS)
       httpOnly: true,
-      sameSite: "none",   // required for Vercel <-> Render
+      sameSite: "none",    // REQUIRED for Vercel -> Render
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })

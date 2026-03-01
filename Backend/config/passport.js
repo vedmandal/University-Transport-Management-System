@@ -69,8 +69,6 @@ passport.use(
     {
       identityMetadata: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration`,
 
-      issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0`,
-
       clientID: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
 
@@ -80,10 +78,10 @@ passport.use(
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
 
       allowHttpForRedirectUrl: false,
-      validateIssuer: true,
 
       scope: ["openid", "profile", "email"],
 
+      validateIssuer: false,   // 🔥 VERY IMPORTANT FOR AZURE V2
       passReqToCallback: false,
       loggingLevel: "warn",
     },
@@ -94,14 +92,9 @@ passport.use(
           return done(new Error("No profile received from Microsoft"), null);
         }
 
-        // Azure can send email in different fields
         const email =
           profile?.preferred_username ||
-          profile?.upn ||
-          profile?.email ||
           profile?._json?.preferred_username ||
-          profile?._json?.upn ||
-          profile?._json?.email ||
           profile?.emails?.[0]?.value;
 
         if (!email) {
@@ -110,7 +103,6 @@ passport.use(
 
         let user = await userModel.findOne({ email });
 
-        // Optional: block parent login
         if (user && user.role === "parent") {
           return done(null, false);
         }
@@ -139,7 +131,6 @@ passport.use(
     }
   )
 );
-
 /* =====================================================
    SESSION SUPPORT (REQUIRED FOR OIDC)
 ===================================================== */
