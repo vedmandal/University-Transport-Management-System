@@ -102,26 +102,36 @@ router.get(
 //* =========================
 
 
-// Redirect to Microsoft
 router.get(
   "/microsoft",
   passport.authenticate("microsoft", {
-    scope: ["openid", "profile", "email"]
+    scope: ["openid", "profile", "email"],
   })
 );
 
-// Microsoft callback (FIXED)
-router.get(
-  "/microsoft/callback",
-  passport.authenticate("microsoft", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-  }),
-  (req, res) => {
-    const { token, role } = req.user;
+router.get("/microsoft/callback", (req, res, next) => {
+  passport.authenticate("microsoft", (err, user, info) => {
 
-    res.redirect(
+    console.log("==== MICROSOFT CALLBACK ====");
+    console.log("Error:", err);
+    console.log("User:", user);
+    console.log("Info:", info);
+
+    if (err) {
+      return res.status(500).send("Microsoft Auth Error: " + err.message);
+    }
+
+    if (!user) {
+      return res.status(401).send("Microsoft Auth Failed");
+    }
+
+    const { token, role } = user;
+
+    return res.redirect(
       `${process.env.FRONTEND_URL}/oauth-success?token=${token}&role=${role}`
     );
-  }
-);
+
+  })(req, res, next);
+});
+
 export default router;
