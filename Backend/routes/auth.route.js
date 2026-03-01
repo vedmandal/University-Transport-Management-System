@@ -10,6 +10,7 @@ import {
   getAllParents,
   assignBusToStudent,
   getMyProfile,
+  changePassword,
 } from "../controller/auth.controller.js";
 import { protect, role } from "../middlewares/auth.middleware.js";
 
@@ -75,4 +76,8 @@ router.get(
     );
   }
 );
+
+
+router.post("/change-password", protect, changePassword);
+
 export default router;

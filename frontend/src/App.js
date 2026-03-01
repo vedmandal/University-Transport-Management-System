@@ -83,6 +83,15 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+<Route
+  path="/parent/settings"
+  element={
+    <ProtectedRoute allowedRole="parent">
+      <ChangePassword />
+    </ProtectedRoute>
+  }
+/>
           <Route path="/oauth-success" element={<OAuthSuccess />} />
 
           {/* 🛠️ Admin */}

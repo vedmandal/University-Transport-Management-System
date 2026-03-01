@@ -2,6 +2,9 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import userModel from "../models/user.model.js"
 import BusModel from "../models/bus.model.js";
+import crypto from "crypto";
+
+import nodemailer from "nodemailer";
 
 
 export const register=async(req,res)=>{
@@ -121,65 +124,112 @@ export const getAllDrivers = async (req, res) => {
       res.status(500).json({ message: "Search failed" });
     }
   };
-
   export const createParent = async (req, res) => {
     try {
-      const { name, email, password, studentId } = req.body;
+      const { name, email, studentId } = req.body;
   
-      /* 1️⃣ Only Admin */
-      if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Only admin allowed" });
-      }
+      // 1. Authorization & Validation
+      if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access required" });
   
-      /* 2️⃣ Validate Student */
-      const student = await userModel.findOne({
-        _id: studentId,
-        role: "student"
-      });
-  
-      if (!student) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-  
-      /* 3️⃣ Prevent Duplicate Student Linking */
-      if (student.parentId) {
-        return res.status(400).json({
-          message: "This student already has a linked parent"
-        });
-      }
-  
-      /* 4️⃣ Prevent Duplicate Email */
       const existingUser = await userModel.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({
-          message: "User with this email already exists"
-        });
-      }
+      if (existingUser) return res.status(400).json({ message: "Email already exists" });
   
-      /* 5️⃣ HASH PASSWORD USING BCRYPT */
-      const salt = await bcrypt.genSalt(3);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const student = await userModel.findOne({ _id: studentId, role: "student" });
+      if (!student) return res.status(404).json({ message: "Student not found" });
+      if (student.parentId) return res.status(400).json({ message: "Student already linked" });
   
-      /* 6️⃣ Create Parent */
+      // 2. Generate Credentials
+      const autoPassword = crypto.randomBytes(4).toString("hex"); // e.g., 'f3a2b1c0'
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(autoPassword, salt);
+  
+      // 3. Save Parent & Link Student
       const parent = await userModel.create({
         name,
         email,
         password: hashedPassword,
-        role: "parent"
+        role: "parent",
       });
   
-      /* 7️⃣ Link Student */
       student.parentId = parent._id;
       await student.save();
   
-      res.status(201).json({
-        message: "Parent created and linked successfully"
+      // 4. Send Email via Brevo
+      const transporter = nodemailer.createTransport({
+        host: process.env.BREVO_HOST,
+        port: process.env.BREVO_PORT,
+        secure: false, // true for 465, false for 587
+        auth: {
+          user: process.env.BREVO_USER,
+          pass: process.env.BREVO_PASS,
+        },
       });
   
+      const mailOptions = {
+        from: '"KRMU Transit Admin" <admin@krmu.edu.in>',
+        to: email,
+        subject: "Your KRMU Parent Portal Account",
+        html: `
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 500px; padding: 30px; border: 1px solid #e2e8f0; border-radius: 24px;">
+            <h2 style="color: #3b82f6; margin-top: 0;">Welcome to KRMU Transit</h2>
+            <p>An account has been created for you to track <strong>${student.name}</strong>.</p>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
+              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Login Password</p>
+              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 3px;">${autoPassword}</h1>
+            </div>
+  
+            <p style="color: #ef4444; font-size: 13px;"><strong>Note:</strong> Please change this password immediately after logging in.</p>
+            
+            <div style="margin-top: 30px; text-align: center;">
+              <a href="https://your-app-url.render.com/login" style="background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Login to Dashboard</a>
+            </div>
+          </div>
+        `,
+      };
+  
+      await transporter.sendMail(mailOptions);
+  
+      res.status(201).json({ message: "Parent created and email sent successfully" });
+  
+    } catch (error) {
+      console.error("Brevo Error:", error);
+      res.status(500).json({ message: "Failed to create account or send email. Check Brevo settings." });
+    }
+  };
+
+  
+  export const changePassword = async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const userId = req.user.id; // Derived from your protect/auth middleware
+  
+      // 1. Find user
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // 2. Verify Old Password
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+  
+      // 3. Hash New Password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+      // 4. Update Database
+      user.password = hashedPassword;
+      await user.save();
+  
+      res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   };
+
   export const getParentBus = async (req, res) => {
     try {
       // 1️⃣ Find student linked to this parent

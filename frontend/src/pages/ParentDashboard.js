@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useSocket } from "../socket";
 import BusMap from "../components/BusMap";
 import api from "../api/axios";
+import { Link } from "react-router-dom"; // Added for navigation
 import "./ParentDashboard.css";
 
 const ParentDashboard = () => {
@@ -57,7 +58,6 @@ const ParentDashboard = () => {
 
   return (
     <div className="parent-root">
-      {/* Visual Background Elements */}
       <div className="mesh-gradient-1"></div>
       <div className="mesh-gradient-2"></div>
 
@@ -87,6 +87,13 @@ const ParentDashboard = () => {
                     </div>
                   </>
                 )}
+
+                {/* NEW SECURITY LINK */}
+                <Link to="/parent/settings" className="btn-logout-glass text-primary border-primary">
+                  <i className="bi bi-shield-lock me-md-2"></i>
+                  <span className="d-none d-md-inline">Security</span>
+                </Link>
+
                 <button className="btn-logout-glass" onClick={logout}>
                   <i className="bi bi-box-arrow-right me-md-2"></i>
                   <span className="d-none d-md-inline">Sign Out</span>
@@ -107,7 +114,6 @@ const ParentDashboard = () => {
           </div>
         ) : (
           <div className="row g-4">
-            {/* LEFT COLUMN: MAP */}
             <div className="col-12 col-lg-8">
               <div className="map-container-glass">
                 <div className="map-header">
@@ -115,12 +121,10 @@ const ParentDashboard = () => {
                     <span className="dot"></span> LIVE TELEMETRY
                   </span>
                 </div>
-                {/* Ensure your BusMap component doesn't have a height of 100vh internally */}
                 <BusMap busLocation={busLocation} />
               </div>
             </div>
 
-            {/* RIGHT COLUMN: INFO CARDS */}
             <div className="col-12 col-lg-4">
               <div className="row g-4">
                 <div className="col-12 col-md-6 col-lg-12">
@@ -130,9 +134,7 @@ const ParentDashboard = () => {
                     </h6>
                     <div className="status-item">
                       <p className="mb-1 text-muted small">Current State</p>
-                      <p className="fw-bold m-0">
-                        {busLocation ? "Bus is in Motion" : "Bus is Stationary"}
-                      </p>
+                      <p className="fw-bold m-0">{busLocation ? "Bus is in Motion" : "Bus is Stationary"}</p>
                     </div>
                     <hr className="my-3 opacity-10" />
                     <div className="status-item">
@@ -147,9 +149,7 @@ const ParentDashboard = () => {
                     <h6 className="fw-800 mb-3">
                       <i className="bi bi-shield-lock me-2 text-primary"></i>Safety Protocol
                     </h6>
-                    <p className="small text-muted mb-3">
-                      Encrypted data channel v4.2 active. High-frequency beacons monitoring.
-                    </p>
+                    <p className="small text-muted mb-3">Encrypted data channel v4.2 active.</p>
                     <div className="badge bg-white text-primary border-0 rounded-pill p-2 px-3 small fw-bold shadow-sm d-inline-block">
                       Secure Connection
                     </div>

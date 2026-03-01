@@ -8,95 +8,160 @@
     overflow-x: hidden;
 }
 
-/* Background mesh to match other pages */
 .mesh-gradient-1 {
     position: absolute;
-    width: 800px; height: 800px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
-    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    top: -100px; right: -100px;
     z-index: 1;
 }
 
-.main-title-sm { font-weight: 800; letter-spacing: -1.5px; color: #1e293b; font-size: 2.2rem; }
-.role-label-blue { font-weight: 800; color: #3b82f6; letter-spacing: 1px; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
+.main-title-sm { font-weight: 800; letter-spacing: -1.5px; color: #1e293b; font-size: 2.5rem; }
+.role-label-blue { font-weight: 800; color: #3b82f6; letter-spacing: 1.5px; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 8px; }
 .text-blue { color: #3b82f6; }
 .fw-800 { font-weight: 800; }
-.fw-600 { font-weight: 600; }
+.max-w-500 { max-width: 500px; }
 
-/* The Glass Card */
+/* Bento Glass Card */
 .unified-glass-card {
     background: white;
-    border-radius: 24px;
-    border: 1px solid rgba(0,0,0,0.04);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    border-radius: 28px;
+    border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.03);
     position: relative;
-    transition: 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-/* Form Styles */
+.icon-badge {
+    width: 44px; height: 44px;
+    background: #eff6ff;
+    color: #3b82f6;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+}
+
+/* Form Styling */
 .form-label-custom {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     margin-bottom: 8px;
+    display: block;
 }
 
 .unified-input {
     width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
-    font-size: 0.9rem;
+    background-color: #f8fafc;
+    font-weight: 600;
+    font-size: 0.95rem;
     transition: 0.3s;
 }
 
 .unified-input:focus {
     outline: none;
+    background-color: white;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
 }
 
-/* Button */
+.form-info-tag {
+    font-size: 0.75rem;
+    color: #3b82f6;
+    font-weight: 700;
+    background: #eff6ff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Premium Button */
 .unified-btn-primary {
-    background: #3b82f6;
+    background: #1e293b;
     color: white;
     border: none;
-    padding: 14px;
-    border-radius: 14px;
+    border-radius: 16px;
     font-weight: 800;
-    font-size: 0.9rem;
-    transition: 0.3s;
+    transition: all 0.3s;
 }
 
 .unified-btn-primary:hover {
-    background: #2563eb;
+    background: #3b82f6;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.25);
 }
 
 /* Table Design */
+.badge-count {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
 .table-custom thead th {
-    background: #f8fafc;
+    background: #fcfdfe;
     border-bottom: 1px solid #f1f5f9;
-    padding: 16px 24px;
-    font-size: 0.7rem;
+    padding: 18px 24px;
+    font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
     color: #94a3b8;
     letter-spacing: 1px;
 }
 
-.table-custom tbody td {
-    padding: 20px 24px;
-    vertical-align: middle;
-    border-bottom: 1px solid #f8fafc;
-    font-size: 0.9rem;
+.table-custom tbody tr:hover { background-color: #fcfdfe; }
+
+.avatar-initials {
+    width: 40px; height: 40px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
 }
 
-.status-dot-active {
-    width: 8px; height: 8px;
+.student-link-box {
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.extra-small { font-size: 0.7rem; }
+
+.status-pill-active {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #dcfce7;
+    color: #166534;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.status-pill-active .dot {
+    width: 6px; height: 6px;
     background: #22c55e;
     border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
+}
+
+.badge-unlinked {
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .main-title-sm { font-size: 1.8rem; }
+    .unified-glass-card { border-radius: 20px; }
 }
