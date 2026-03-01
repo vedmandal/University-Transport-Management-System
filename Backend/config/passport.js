@@ -29,7 +29,7 @@ passport.use(
 
         let user = await userModel.findOne({ email });
 
-        // Prevent parent login via Google
+        // Block parent login via Google
         if (user && user.role === "parent") {
           return done(null, false);
         }
@@ -60,8 +60,9 @@ passport.use(
 );
 
 /* =====================================================
-   MICROSOFT STRATEGY (AZURE OIDC)
+   MICROSOFT STRATEGY (AZURE OIDC - SINGLE TENANT)
 ===================================================== */
+
 passport.use(
   "microsoft",
   new OIDCStrategy(
@@ -78,13 +79,13 @@ passport.use(
 
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
 
-      allowHttpForRedirectUrl: false,   // 🔥 IMPORTANT
-      validateIssuer: true,            // 🔥 IMPORTANT
+      allowHttpForRedirectUrl: false,
+      validateIssuer: true,
 
       scope: ["openid", "profile", "email"],
 
       passReqToCallback: false,
-      loggingLevel: "info",
+      loggingLevel: "warn",
     },
 
     async (iss, sub, profile, accessToken, refreshToken, done) => {
@@ -93,13 +94,15 @@ passport.use(
           return done(new Error("No profile received from Microsoft"), null);
         }
 
+        // Azure can send email in different fields
         const email =
           profile?.preferred_username ||
           profile?.upn ||
           profile?.email ||
           profile?._json?.preferred_username ||
           profile?._json?.upn ||
-          profile?._json?.email;
+          profile?._json?.email ||
+          profile?.emails?.[0]?.value;
 
         if (!email) {
           return done(new Error("Email not found in Microsoft profile"), null);
@@ -107,6 +110,7 @@ passport.use(
 
         let user = await userModel.findOne({ email });
 
+        // Optional: block parent login
         if (user && user.role === "parent") {
           return done(null, false);
         }
@@ -135,3 +139,15 @@ passport.use(
     }
   )
 );
+
+/* =====================================================
+   SESSION SUPPORT (REQUIRED FOR OIDC)
+===================================================== */
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
