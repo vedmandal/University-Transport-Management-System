@@ -61,21 +61,30 @@ passport.use(
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
       scope: ["openid", "profile", "email"],
       validateIssuer: false,
-      allowHttpForRedirectUrl: false,
     },
 
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
 
-        console.log("Microsoft profile:", profile);
+        console.log("===== MICROSOFT PROFILE =====");
+        console.log(profile);
+
+        if (!profile) {
+          console.log("No profile received");
+          return done(null, false);
+        }
 
         const email =
           profile?.preferred_username ||
           profile?._json?.preferred_username ||
-          profile?.upn;
+          profile?._json?.upn ||
+          profile?.upn ||
+          profile?.email;
+
+        console.log("EMAIL:", email);
 
         if (!email) {
-          console.log("No email found");
+          console.log("Email not found");
           return done(null, false);
         }
 
@@ -88,6 +97,7 @@ passport.use(
             role: "student",
             provider: "microsoft",
           });
+          console.log("New Microsoft user created");
         }
 
         const token = jwt.sign(
@@ -96,10 +106,12 @@ passport.use(
           { expiresIn: "7d" }
         );
 
+        console.log("Microsoft login success");
+
         return done(null, { token, role: user.role });
 
       } catch (err) {
-        console.log("Microsoft Error:", err);
+        console.log("Microsoft Strategy Error:", err);
         return done(err, null);
       }
     }
