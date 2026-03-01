@@ -27,8 +27,7 @@ const server = http.createServer(app);
 ConnectDb();
 
 /* ========================
-   TRUST PROXY (ONLY ONCE)
-   Required for Render HTTPS
+   TRUST PROXY (REQUIRED FOR RENDER)
 ======================== */
 app.set("trust proxy", 1);
 
@@ -46,11 +45,7 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS not allowed"), false);
     },
     credentials: true,
@@ -60,7 +55,7 @@ app.use(
 app.use(express.json());
 
 /* ========================
-   SESSION (CRITICAL FOR MICROSOFT OIDC)
+   SESSION (CRITICAL FOR MICROSOFT)
 ======================== */
 app.use(
   session({
@@ -69,12 +64,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     proxy: true,
-    rolling: true, // refresh cookie
     cookie: {
-      secure: true,        // MUST be true on Render (HTTPS)
+      secure: true,        // HTTPS required
       httpOnly: true,
-      sameSite: "none",    // REQUIRED for Vercel -> Render
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: "lax",     // 🔥 IMPORTANT FIX
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -113,8 +107,4 @@ const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(
-    "Google Client ID loaded:",
-    process.env.GOOGLE_CLIENT_ID ? "YES" : "NO"
-  );
 });

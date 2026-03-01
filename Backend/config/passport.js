@@ -7,12 +7,9 @@ import { OIDCStrategy } from "passport-azure-ad";
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 
-/* =====================================================
-   GOOGLE STRATEGY
-===================================================== */
+/* ================= GOOGLE ================= */
 
 passport.use(
-  "google",
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -22,17 +19,11 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile?.emails?.[0]?.value;
-
-        if (!email) {
-          return done(new Error("Email not found in Google profile"), null);
-        }
+        if (!email) return done(null, false);
 
         let user = await userModel.findOne({ email });
 
-        // Block parent login via Google
-        if (user && user.role === "parent") {
-          return done(null, false);
-        }
+        if (user && user.role === "parent") return done(null, false);
 
         if (!user) {
           user = await userModel.create({
@@ -50,62 +41,43 @@ passport.use(
         );
 
         return done(null, { token, role: user.role });
-
-      } catch (error) {
-        console.error("Google Strategy Error:", error);
-        return done(error, null);
+      } catch (err) {
+        return done(err, null);
       }
     }
   )
 );
 
-/* =====================================================
-   MICROSOFT STRATEGY (AZURE OIDC - SINGLE TENANT)
-===================================================== */
+/* ================= MICROSOFT ================= */
 
 passport.use(
   "microsoft",
   new OIDCStrategy(
     {
       identityMetadata: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration`,
-
       clientID: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-
       responseType: "code",
       responseMode: "query",
-
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
-
-      allowHttpForRedirectUrl: false,
-
       scope: ["openid", "profile", "email"],
-
-      validateIssuer: false,   // 🔥 VERY IMPORTANT FOR AZURE V2
+      validateIssuer: false,
       passReqToCallback: false,
       loggingLevel: "warn",
     },
-
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
-        if (!profile) {
-          return done(new Error("No profile received from Microsoft"), null);
-        }
+        if (!profile) return done(null, false);
 
         const email =
           profile?.preferred_username ||
-          profile?._json?.preferred_username ||
-          profile?.emails?.[0]?.value;
+          profile?._json?.preferred_username;
 
-        if (!email) {
-          return done(new Error("Email not found in Microsoft profile"), null);
-        }
+        if (!email) return done(null, false);
 
         let user = await userModel.findOne({ email });
 
-        if (user && user.role === "parent") {
-          return done(null, false);
-        }
+        if (user && user.role === "parent") return done(null, false);
 
         if (!user) {
           user = await userModel.create({
@@ -123,22 +95,14 @@ passport.use(
         );
 
         return done(null, { token, role: user.role });
-
-      } catch (error) {
-        console.error("Microsoft Strategy Error:", error);
-        return done(error, null);
+      } catch (err) {
+        return done(err, null);
       }
     }
   )
 );
-/* =====================================================
-   SESSION SUPPORT (REQUIRED FOR OIDC)
-===================================================== */
 
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
+/* ================= SESSION SUPPORT ================= */
 
-passport.deserializeUser((obj, done) => {
-  done(null, obj);
-});
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));

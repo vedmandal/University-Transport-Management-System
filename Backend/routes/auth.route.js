@@ -16,70 +16,35 @@ import { protect, role } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 /* =========================
-   AUTH ROUTES
+   BASIC AUTH
 ========================= */
-
 router.post("/register", register);
 router.post("/login", login);
-
 router.get("/me", protect, getMyProfile);
 
 /* =========================
-   ADMIN ROUTES
+   ADMIN
 ========================= */
-
 router.get("/get-drivers", protect, role("admin"), getAllDrivers);
-
-router.get(
-  "/students/search",
-  protect,
-  role("driver", "admin"),
-  searchStudents
-);
-
-router.post(
-  "/create-parent",
-  protect,
-  role("admin"),
-  createParent
-);
-
-router.get(
-  "/parents",
-  protect,
-  role("admin"),
-  getAllParents
-);
-
-router.put(
-  "/assign-bus",
-  protect,
-  role("admin"),
-  assignBusToStudent
-);
+router.get("/students/search", protect, role("driver", "admin"), searchStudents);
+router.post("/create-parent", protect, role("admin"), createParent);
+router.get("/parents", protect, role("admin"), getAllParents);
+router.put("/assign-bus", protect, role("admin"), assignBusToStudent);
 
 /* =========================
-   PARENT ROUTES
+   PARENT
 ========================= */
-
-router.get(
-  "/parent/bus",
-  protect,
-  role("parent"),
-  getParentBus
-);
+router.get("/parent/bus", protect, role("parent"), getParentBus);
 
 /* =========================
    GOOGLE OAUTH
 ========================= */
 
-// Redirect to Google
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// Google callback
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -88,7 +53,6 @@ router.get(
   }),
   (req, res) => {
     const { token, role } = req.user;
-
     res.redirect(
       `${process.env.FRONTEND_URL}/oauth-success?token=${token}&role=${role}`
     );
@@ -99,9 +63,6 @@ router.get(
    MICROSOFT OAUTH
 ========================= */
 
-//* =========================
-
-
 router.get(
   "/microsoft",
   passport.authenticate("microsoft", {
@@ -109,29 +70,17 @@ router.get(
   })
 );
 
-router.get("/microsoft/callback", (req, res, next) => {
-  passport.authenticate("microsoft", (err, user, info) => {
-
-    console.log("==== MICROSOFT CALLBACK ====");
-    console.log("Error:", err);
-    console.log("User:", user);
-    console.log("Info:", info);
-
-    if (err) {
-      return res.status(500).send("Microsoft Auth Error: " + err.message);
-    }
-
-    if (!user) {
-      return res.status(401).send("Microsoft Auth Failed");
-    }
-
-    const { token, role } = user;
-
-    return res.redirect(
+router.get(
+  "/microsoft/callback",
+  passport.authenticate("microsoft", {
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+  }),
+  (req, res) => {
+    const { token, role } = req.user;
+    res.redirect(
       `${process.env.FRONTEND_URL}/oauth-success?token=${token}&role=${role}`
     );
-
-  })(req, res, next);
-});
+  }
+);
 
 export default router;
