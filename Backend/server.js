@@ -61,6 +61,8 @@ app.use(express.json());
 /* ========================
    SESSION (FIXED FOR PRODUCTION)
 ======================== */
+app.set("trust proxy", 1);
+
 app.use(
   session({
     name: "connect.sid",
