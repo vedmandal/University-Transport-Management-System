@@ -62,38 +62,44 @@ passport.use(
 /* =====================================================
    MICROSOFT STRATEGY (AZURE OIDC)
 ===================================================== */
-
 passport.use(
   "microsoft",
   new OIDCStrategy(
     {
       identityMetadata: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration`,
+
+      issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0`,
+
       clientID: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+
       responseType: "code",
       responseMode: "query",
+
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
-      allowHttpForRedirectUrl: true,
-      scope: ["profile", "email", "openid"],
-      validateIssuer: false,
+
+      allowHttpForRedirectUrl: false,   // 🔥 IMPORTANT
+      validateIssuer: true,            // 🔥 IMPORTANT
+
+      scope: ["openid", "profile", "email"],
+
       passReqToCallback: false,
-      loggingLevel: "warn",
+      loggingLevel: "info",
     },
+
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
         if (!profile) {
           return done(new Error("No profile received from Microsoft"), null);
         }
 
-        // Safe email extraction (Azure can send different fields)
         const email =
           profile?.preferred_username ||
           profile?.upn ||
           profile?.email ||
           profile?._json?.preferred_username ||
           profile?._json?.upn ||
-          profile?._json?.email ||
-          profile?.emails?.[0]?.value;
+          profile?._json?.email;
 
         if (!email) {
           return done(new Error("Email not found in Microsoft profile"), null);
@@ -101,7 +107,6 @@ passport.use(
 
         let user = await userModel.findOne({ email });
 
-        // Optional: block parent login via Microsoft
         if (user && user.role === "parent") {
           return done(null, false);
         }
@@ -130,15 +135,3 @@ passport.use(
     }
   )
 );
-
-/* =====================================================
-   SERIALIZE / DESERIALIZE (Required for sessions)
-===================================================== */
-
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser((obj, done) => {
-  done(null, obj);
-});
