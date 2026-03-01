@@ -3,8 +3,8 @@ import bcrypt from "bcrypt"
 import userModel from "../models/user.model.js"
 import BusModel from "../models/bus.model.js";
 import crypto from "crypto";
-
-import nodemailer from "nodemailer";
+import axios from "axios"
+ 
 
 
 export const register=async(req,res)=>{
