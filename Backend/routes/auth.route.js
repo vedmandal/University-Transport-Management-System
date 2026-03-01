@@ -105,7 +105,9 @@ router.get(
 // Redirect to Microsoft
 router.get(
   "/microsoft",
-  passport.authenticate("microsoft")
+  passport.authenticate("microsoft", {
+    scope: ["openid", "profile", "email"]
+  })
 );
 
 // Microsoft callback (FIXED)
