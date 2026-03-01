@@ -56,12 +56,9 @@ router.get(
 );
 
 /* ================= MICROSOFT ================= */
-
 router.get(
   "/microsoft",
-  passport.authenticate("microsoft", {
-    scope: ["openid", "profile", "email"],
-  })
+  passport.authenticate("microsoft")
 );
 
 router.get(
@@ -73,10 +70,9 @@ router.get(
   (req, res) => {
     const { token, role } = req.user;
 
-    return res.redirect(
+    res.redirect(
       `${process.env.FRONTEND_URL}/oauth-success?token=${token}&role=${role}`
     );
   }
 );
-
 export default router;
