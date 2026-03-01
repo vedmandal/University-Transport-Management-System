@@ -124,7 +124,7 @@ export default function Login() {
             <span>Outlook</span>
           </button>
         </div>
-        <button type="button"> click</button>
+      
 
         <div className="unified-auth-footer">
           <Link to="/forgot" className="unified-link-primary">
