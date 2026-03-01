@@ -10,6 +10,7 @@ import userModel from "../models/user.model.js";
 /* ================= GOOGLE ================= */
 
 passport.use(
+  "google",
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -62,13 +63,11 @@ passport.use(
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
       scope: ["openid", "profile", "email"],
       validateIssuer: false,
+      allowHttpForRedirectUrl: false,
       passReqToCallback: false,
-      loggingLevel: "warn",
     },
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
-        if (!profile) return done(null, false);
-
         const email =
           profile?.preferred_username ||
           profile?._json?.preferred_username;
@@ -101,8 +100,3 @@ passport.use(
     }
   )
 );
-
-/* ================= SESSION SUPPORT ================= */
-
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));

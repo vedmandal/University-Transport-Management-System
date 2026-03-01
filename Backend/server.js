@@ -4,9 +4,9 @@ dotenv.config();
 import express from "express";
 import http from "http";
 import cors from "cors";
-import { Server } from "socket.io";
 import session from "express-session";
 import passport from "passport";
+import { Server } from "socket.io";
 
 import "./config/passport.js";
 
@@ -21,19 +21,12 @@ import { socketHandler } from "./socket.js";
 const app = express();
 const server = http.createServer(app);
 
-/* ========================
-   DATABASE
-======================== */
 ConnectDb();
 
-/* ========================
-   TRUST PROXY (REQUIRED FOR RENDER)
-======================== */
+/* ================= TRUST PROXY (RENDER) ================= */
 app.set("trust proxy", 1);
 
-/* ========================
-   CORS
-======================== */
+/* ================= CORS ================= */
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -43,20 +36,14 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("CORS not allowed"), false);
-    },
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-/* ========================
-   SESSION (CRITICAL FOR MICROSOFT)
-======================== */
+/* ================= SESSION (ONLY FOR OIDC STATE) ================= */
 app.use(
   session({
     name: "connect.sid",
@@ -65,32 +52,26 @@ app.use(
     saveUninitialized: false,
     proxy: true,
     cookie: {
-      secure: true,        // HTTPS required
+      secure: true,
       httpOnly: true,
-      sameSite: "lax",     // 🔥 IMPORTANT FIX
-      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "none",
+      maxAge: 1000 * 60 * 15, // 15 minutes
     },
   })
 );
 
-/* ========================
-   PASSPORT
-======================== */
-app.use(passport.initialize());
-app.use(passport.session());
+/* ================= PASSPORT ================= */
+app.use(passport.initialize()); 
+// ❌ DO NOT USE passport.session()
 
-/* ========================
-   ROUTES
-======================== */
+/* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
 
-/* ========================
-   SOCKET.IO
-======================== */
+/* ================= SOCKET ================= */
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -100,9 +81,7 @@ const io = new Server(server, {
 
 socketHandler(io);
 
-/* ========================
-   START SERVER
-======================== */
+/* ================= START ================= */
 const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {

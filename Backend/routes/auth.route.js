@@ -15,30 +15,13 @@ import { protect, role } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-/* =========================
-   BASIC AUTH
-========================= */
+/* ================= NORMAL AUTH ================= */
+
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", protect, getMyProfile);
 
-/* =========================
-   ADMIN
-========================= */
-router.get("/get-drivers", protect, role("admin"), getAllDrivers);
-router.get("/students/search", protect, role("driver", "admin"), searchStudents);
-router.post("/create-parent", protect, role("admin"), createParent);
-router.get("/parents", protect, role("admin"), getAllParents);
-router.put("/assign-bus", protect, role("admin"), assignBusToStudent);
-
-/* =========================
-   PARENT
-========================= */
-router.get("/parent/bus", protect, role("parent"), getParentBus);
-
-/* =========================
-   GOOGLE OAUTH
-========================= */
+/* ================= GOOGLE ================= */
 
 router.get(
   "/google",
@@ -59,9 +42,7 @@ router.get(
   }
 );
 
-/* =========================
-   MICROSOFT OAUTH
-========================= */
+/* ================= MICROSOFT ================= */
 
 router.get(
   "/microsoft",
@@ -73,10 +54,12 @@ router.get(
 router.get(
   "/microsoft/callback",
   passport.authenticate("microsoft", {
+    session: false,
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
   }),
   (req, res) => {
     const { token, role } = req.user;
+
     res.redirect(
       `${process.env.FRONTEND_URL}/oauth-success?token=${token}&role=${role}`
     );
