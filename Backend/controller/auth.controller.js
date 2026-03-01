@@ -174,25 +174,25 @@ export const getAllDrivers = async (req, res) => {
         to: [{ email: email, name: name }],
         subject: "Your KRMU Parent Portal Account Credentials",
         htmlContent: `
-          <div style="font-family: sans-serif; max-width: 500px; padding: 25px; border: 1px solid #e2e8f0; border-radius: 20px;">
-            <h2 style="color: #3b82f6; margin-top: 0;">Welcome to KRMU Transit</h2>
-            <p>An account has been created for you to track <strong>${student.name}</strong>.</p>
-            
-            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
-              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Temporary Password</p>
-              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 4px; font-family: monospace;">${autoPassword}</h1>
-            </div>
-  
-            <p style="color: #64748b; font-size: 13px;">Please use this password to log in at the portal. You should update your password immediately after logging in.</p>
-            
-            <div style="margin-top: 25px; text-align: center;">
-              <a href="https://university-transport-management-system-frontend.onrender.com/login" 
-                 style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">
-                 Login to Dashboard
-              </a>
-            </div>
-          </div>
-        `
+  <div style="font-family: sans-serif; max-width: 500px; padding: 25px; border: 1px solid #e2e8f0; border-radius: 20px;">
+    <h2 style="color: #3b82f6; margin-top: 0;">Welcome to KRMU Transit</h2>
+    <p>An account has been created for you to track <strong>${student.name}</strong>.</p>
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
+      <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Temporary Password</p>
+      <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 4px; font-family: monospace;">${autoPassword}</h1>
+    </div>
+
+    <p style="color: #ef4444; font-size: 13px;"><strong>Note:</strong> Please change this password immediately after logging in.</p>
+    
+    <div style="margin-top: 25px; text-align: center;">
+      <a href="https://university-transport-management-sys.vercel.app/login" 
+         style="background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">
+         Login to Dashboard
+      </a>
+    </div>
+  </div>
+`
       };
   
       
