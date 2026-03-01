@@ -49,7 +49,6 @@ passport.use(
 );
 
 /* ================= MICROSOFT ================= */
-
 passport.use(
   "microsoft",
   new OIDCStrategy(
@@ -61,25 +60,30 @@ passport.use(
       responseMode: "query",
       redirectUrl: `${process.env.BACKEND_URL}/api/auth/microsoft/callback`,
       scope: ["openid", "profile", "email"],
-      validateIssuer: false,   // important for Azure v2
+      validateIssuer: false,
       allowHttpForRedirectUrl: false,
-      passReqToCallback: false,
     },
+
     async (iss, sub, profile, accessToken, refreshToken, done) => {
       try {
+
+        console.log("Microsoft profile:", profile);
+
         const email =
           profile?.preferred_username ||
-          profile?._json?.preferred_username;
+          profile?._json?.preferred_username ||
+          profile?.upn;
 
-        if (!email) return done(null, false);
+        if (!email) {
+          console.log("No email found");
+          return done(null, false);
+        }
 
         let user = await userModel.findOne({ email });
 
-        if (user && user.role === "parent") return done(null, false);
-
         if (!user) {
           user = await userModel.create({
-            name: profile.displayName || "Microsoft User",
+            name: profile.displayName || "Student",
             email,
             role: "student",
             provider: "microsoft",
@@ -93,7 +97,9 @@ passport.use(
         );
 
         return done(null, { token, role: user.role });
+
       } catch (err) {
+        console.log("Microsoft Error:", err);
         return done(err, null);
       }
     }
