@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config(); // MUST be first
+dotenv.config();
 
 import express from "express";
 import http from "http";
@@ -8,7 +8,6 @@ import { Server } from "socket.io";
 import session from "express-session";
 import passport from "passport";
 
-// Load passport strategies AFTER dotenv
 import "./config/passport.js";
 
 import ConnectDb from "./Database/Db.js";
@@ -22,14 +21,19 @@ import { socketHandler } from "./socket.js";
 const app = express();
 const server = http.createServer(app);
 
-// ========================
-// DATABASE
-// ========================
+/* ========================
+   DATABASE
+======================== */
 ConnectDb();
 
-// ========================
-// CORS
-// ========================
+/* ========================
+   TRUST PROXY (REQUIRED FOR RENDER)
+======================== */
+app.set("trust proxy", 1);
+
+/* ========================
+   CORS
+======================== */
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -41,6 +45,7 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
@@ -53,40 +58,43 @@ app.use(
 
 app.use(express.json());
 
-// ========================
-// SESSION (REQUIRED FOR MICROSOFT OIDC)
-// ========================
+/* ========================
+   SESSION (FIXED FOR PRODUCTION)
+======================== */
 app.use(
   session({
     name: "connect.sid",
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
-      secure: true, // required for HTTPS (Render)
-      sameSite: "none", // required for cross-site (Vercel <-> Render)
+      secure: true,       // required for HTTPS (Render)
+      httpOnly: true,
+      sameSite: "none",   // required for Vercel <-> Render
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
 
-// ========================
-// PASSPORT
-// ========================
+/* ========================
+   PASSPORT
+======================== */
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ========================
-// ROUTES
-// ========================
+/* ========================
+   ROUTES
+======================== */
 app.use("/api/auth", authRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
 
-// ========================
-// SOCKET.IO
-// ========================
+/* ========================
+   SOCKET.IO
+======================== */
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -96,9 +104,9 @@ const io = new Server(server, {
 
 socketHandler(io);
 
-// ========================
-// START SERVER
-// ========================
+/* ========================
+   START SERVER
+======================== */
 const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, () => {
