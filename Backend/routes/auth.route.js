@@ -68,7 +68,8 @@ router.get(
   passport.authenticate("microsoft", {
     scope: ["openid", "profile", "email"],
   })
-)router.get("/microsoft/callback", (req, res, next) => {
+)
+router.get("/microsoft/callback", (req, res, next) => {
   passport.authenticate("microsoft", { session: false }, (err, user) => {
 
     if (err) {
