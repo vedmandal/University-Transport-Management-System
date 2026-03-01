@@ -126,22 +126,33 @@ export const getAllDrivers = async (req, res) => {
       res.status(500).json({ message: "Search failed" });
     }
   };
+  
   export const createParent = async (req, res) => {
     try {
       const { name, email, studentId } = req.body;
   
       // 1. Authorization & Validation
-      if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access required" });
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
   
       const existingUser = await userModel.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: "Email already exists" });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
   
       const student = await userModel.findOne({ _id: studentId, role: "student" });
-      if (!student) return res.status(404).json({ message: "Student not found" });
-      if (student.parentId) return res.status(400).json({ message: "Student already linked" });
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      if (student.parentId) {
+        return res.status(400).json({ message: "Student already linked to another parent" });
+      }
   
       // 2. Generate Credentials
-      const autoPassword = crypto.randomBytes(4).toString("hex"); // e.g., 'f3a2b1c0'
+      // Generate a 8-character hex password (e.g., 'f3a2b1c0')
+      const autoPassword = crypto.randomBytes(4).toString("hex"); 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(autoPassword, salt);
   
@@ -151,56 +162,77 @@ export const getAllDrivers = async (req, res) => {
         email,
         password: hashedPassword,
         role: "parent",
+        provider: "local"
       });
   
+      // Link the student to this new parent
       student.parentId = parent._id;
       await student.save();
   
-      // 4. Send Email via Brevo
+      // 4. Configure Nodemailer for Brevo (Fixing the Timeout)
       const transporter = nodemailer.createTransport({
-        host: process.env.BREVO_HOST,
-        port: process.env.BREVO_PORT,
-        secure: false, // true for 465, false for 587
+        host: "smtp-relay.brevo.com",
+        port: 587, // Standard for Render/Cloud
+        secure: false, // Must be false for 587
         auth: {
-          user: process.env.BREVO_USER,
-          pass: process.env.BREVO_PASS,
+          user: process.env.BREVO_USER, // Your Brevo SMTP Email
+          pass: process.env.BREVO_PASS, // Your Brevo SMTP Key
         },
+        // Added timeouts to prevent the ETIMEDOUT error
+        connectionTimeout: 15000, 
+        greetingTimeout: 15000,
+        socketTimeout: 15000,
       });
   
       const mailOptions = {
-        from: '"KRMU Transit Admin" <admin@krmu.edu.in>',
+        // IMPORTANT: Use your verified Brevo email here
+        from: `"KRMU Transit Admin" <${process.env.BREVO_USER}>`,
         to: email,
         subject: "Your KRMU Parent Portal Account",
         html: `
-          <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 500px; padding: 30px; border: 1px solid #e2e8f0; border-radius: 24px;">
+          <div style="font-family: sans-serif; max-width: 500px; padding: 30px; border: 1px solid #e2e8f0; border-radius: 24px;">
             <h2 style="color: #3b82f6; margin-top: 0;">Welcome to KRMU Transit</h2>
             <p>An account has been created for you to track <strong>${student.name}</strong>.</p>
             
             <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #eff6ff; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Login Password</p>
-              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 3px;">${autoPassword}</h1>
+              <h1 style="margin: 10px 0; color: #1e293b; letter-spacing: 3px; font-family: monospace;">${autoPassword}</h1>
             </div>
   
-            <p style="color: #ef4444; font-size: 13px;"><strong>Note:</strong> Please change this password immediately after logging in.</p>
+            <p style="color: #ef4444; font-size: 13px;"><strong>Note:</strong> Please change this password immediately after your first login via the Settings page.</p>
             
             <div style="margin-top: 30px; text-align: center;">
-              <a href="https://your-app-url.render.com/login" style="background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Login to Dashboard</a>
+              <a href="https://university-transport-management-system-frontend.onrender.com/login" 
+                 style="background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">
+                 Login to Dashboard
+              </a>
             </div>
           </div>
         `,
       };
   
-      await transporter.sendMail(mailOptions);
+      
   
-      res.status(201).json({ message: "Parent created and email sent successfully" });
+      // 5. Attempt to send email
+      try {
+        await transporter.sendMail(mailOptions);
+        return res.status(201).json({ 
+          message: "Parent created and credentials emailed successfully." 
+        });
+      } catch (mailError) {
+        console.error("Brevo SMTP Error:", mailError);
+        // Parent is already created in DB, so we return 201 but with a warning
+        return res.status(201).json({ 
+          message: "Parent created, but email failed to send. Please provide password manually.",
+          tempPassword: autoPassword 
+        });
+      }
   
     } catch (error) {
-      console.error("Brevo Error:", error);
-      res.status(500).json({ message: "Failed to create account or send email. Check Brevo settings." });
+      console.error("General Create Parent Error:", error);
+      res.status(500).json({ message: "Internal server error during parent creation." });
     }
   };
-
-
   export const changePassword = async (req, res) => {
     try {
       const { oldPassword, newPassword } = req.body;
