@@ -22,6 +22,7 @@ import ParentManagement from "./pages/Admin/ParentManagement";
 import ParentDashboard from "./pages/ParentDashboard";
 import AssignBus from "./pages/Admin/AssignBus";
 import OAuthSuccess from "./pages/OAuthSuccess";
+import ChangePassword from "./pages/ChangePassword";
 
 /* --------------------------------------------------------------------------
    🛡️ PROTECTED ROUTE (FINAL CLEAN VERSION)

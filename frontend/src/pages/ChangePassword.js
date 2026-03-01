@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../../api/axios";
+import api from "../api/axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import "./ParentDashboard.css"; // Reuse the same CSS
