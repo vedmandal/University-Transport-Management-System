@@ -15,7 +15,7 @@ export default function Login() {
 
   const BACKEND_URL =
     process.env.REACT_APP_BACKEND_URL ||
-    "http://localhost:8080";
+    "https://university-transport-management-system-1.onrender.com";
 
   const submit = async (e) => {
     e.preventDefault();
@@ -55,7 +55,7 @@ export default function Login() {
       <div className="mesh-gradient-1"></div>
       <div className="mesh-gradient-2"></div>
 
-      <div className="unified-glass-card">
+      <div className="unified-glass-card shadow-lg">
         <div className="auth-header-content text-center">
           <div className="auth-icon-box">
             <h2 style={{ margin: 0 }}>🚍</h2>
@@ -66,6 +66,7 @@ export default function Login() {
 
         <form onSubmit={submit} className="unified-auth-form mt-4">
           <div className="unified-input-group">
+            <i className="bi bi-envelope-at"></i>
             <input
               type="email"
               placeholder="name@krmu.edu.in"
@@ -76,6 +77,7 @@ export default function Login() {
           </div>
 
           <div className="unified-input-group mt-3">
+            <i className="bi bi-shield-lock"></i>
             <input
               type="password"
               placeholder="Account Password"
@@ -90,32 +92,37 @@ export default function Login() {
             className="unified-btn-primary"
             disabled={loading}
           >
-            {loading ? "Verifying Credentials..." : "Log in to Portal"}
+            {loading ? "Verifying..." : "Log in to Portal"}
           </button>
         </form>
 
-        {/* OAuth Divider */}
+        {/* Improved OAuth Divider */}
         <div className="oauth-divider">
-          <span>OR</span>
+          <div className="divider-line"></div>
+          <span>OR CONTINUE WITH</span>
+          <div className="divider-line"></div>
         </div>
 
-        {/* Google Login */}
-        <button
-          type="button"
-          className="google-btn"
-          onClick={handleGoogleLogin}
-        >
-          Continue with Google
-        </button>
+        {/* Refined OAuth Buttons Container */}
+        <div className="oauth-button-container">
+          <button
+            type="button"
+            className="oauth-btn-glass"
+            onClick={handleGoogleLogin}
+          >
+            <i className="bi bi-google text-danger"></i> 
+            <span>Google</span>
+          </button>
 
-        {/* Microsoft Login */}
-        <button
-          type="button"
-          className="microsoft-btn"
+          <button
+            type="button"
+            className="oauth-btn-glass"
           onClick={handleMicrosoftLogin}
-        >
-          Continue with Microsoft Outlook
-        </button>
+          >
+            <i className="bi bi-microsoft text-primary"></i> 
+            <span>Outlook</span>
+          </button>
+        </div>
 
         <div className="unified-auth-footer">
           <Link to="/forgot" className="unified-link-primary">
