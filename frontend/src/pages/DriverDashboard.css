@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* EXISTING COLORS & STRUCTURE MAINTAINED */
+/* ======================================================
+   ROOT & LAYOUT
+====================================================== */
 .drv-root {
     min-height: 100vh;
     background-color: #f1f5f9;
@@ -10,110 +12,309 @@
     padding-bottom: 50px;
 }
 
-/* 📱 MOBILE RESPONSIVENESS TWEAKS */
-@media (max-width: 768px) {
-    .bus-title-responsive { font-size: 1.5rem; }
-    .manual-title-res { font-size: 1.2rem; }
-    .drv-list-scroll { height: 320px; } /* Slightly shorter for mobile */
-    .small-mobile-text { font-size: 0.85rem; }
-    .extra-small-text { font-size: 0.7rem; }
-    .btn-att-pill { padding: 4px 10px; font-size: 0.7rem; }
+/* Background Mesh Decor */
+.mesh-gradient-1 {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 400px;
+    background: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.05) 0, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
-.navbar-custom { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+.drv-content-layer {
+    position: relative;
+    z-index: 1;
+}
 
+/* ======================================================
+   NAVBAR
+====================================================== */
+.navbar-custom {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    z-index: 1000;
+}
+
+.nav-logo {
+    font-weight: 800;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-dot {
+    width: 10px;
+    height: 10px;
+    background: #3b82f6;
+    border-radius: 50%;
+}
+
+.text-blue { color: #3b82f6; }
+
+.drv-user-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 1px;
+}
+
+.btn-logout-glass {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+.btn-logout-glass:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* ======================================================
+   BENTO HEADER (BUS INFO)
+====================================================== */
 .bento-header-drv {
     background: white;
     padding: 20px;
     border-radius: 20px;
     border: 1px solid rgba(0,0,0,0.04);
-}
-
-@media (min-width: 768px) {
-    .bento-header-drv { padding: 30px; border-radius: 24px; }
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .drv-bus-sq {
-    width: 55px; height: 55px;
-    background: #1e293b; color: white;
-    border-radius: 15px; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 1.5rem; font-weight: 900;
+    width: 55px;
+    height: 55px;
+    background: #1e293b;
+    color: white;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 900;
 }
 
-@media (min-width: 768px) {
-    .drv-bus-sq { width: 65px; height: 65px; font-size: 2rem; }
+.role-label-blue {
+    font-size: 0.75rem;
+    color: #3b82f6;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-/* List Containers */
-.unified-glass-card { background: white; border-radius: 20px; overflow: hidden; height: 100%; }
+/* ======================================================
+   LISTS & CARDS
+====================================================== */
+.unified-glass-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
 .border-top-warning { border-top: 4px solid #f59e0b !important; }
 .border-top-blue { border-top: 4px solid #3b82f6 !important; }
 
-.drv-list-item-new {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px; border-radius: 12px; border: 1px solid #f1f5f9;
-    margin-bottom: 10px; transition: 0.3s;
+.count-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 800;
 }
 
-/* Attendance Styling */
-.attended-row { background: #f0fdf4 !important; border-left: 5px solid #22c55e !important; }
-.absent-row { background: #fff1f2 !important; border-left: 5px solid #ef4444 !important; }
+.drv-list-scroll {
+    height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.drv-list-item-new {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 12px;
+    background: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Status Colors */
+.attended-row { 
+    background: #f0fdf4 !important; 
+    border-left: 5px solid #22c55e !important; 
+}
+.absent-row { 
+    background: #fff1f2 !important; 
+    border-left: 5px solid #ef4444 !important; 
+}
+
+/* ======================================================
+   BUTTONS
+====================================================== */
+.btn-approve-mini {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: 0.2s;
+}
+
+.btn-approve-mini:hover { background: #d97706; transform: translateY(-2px); }
 
 .btn-att-pill {
-    border-radius: 100px; font-weight: 800; border: 1.5px solid #e2e8f0;
-    background: white; transition: 0.2s;
-}
-.p-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
-.a-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
-
-/* 📝 MANUAL ENTRY FULL WIDTH */
-.manual-entry-section-full {
-    background: #ffffff; border-radius: 20px;
-    overflow: hidden; border: 1px solid #e2e8f0;
-}
-
-@media (min-width: 768px) {
-    .manual-entry-section-full { border-radius: 30px; }
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-weight: 800;
+    border: 2px solid #e2e8f0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
 }
 
-.manual-entry-header-dark { background: #1e293b; color: white; }
+.p-btn.active { background: #22c55e; color: white; border-color: #22c55e; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3); }
+.a-btn.active { background: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
 
-.manual-input-large {
-    width: 100%; height: 50px; padding: 0 15px;
-    border-radius: 12px; border: 2px solid #f1f5f9;
-    background: #f8fafc; font-weight: 700; color: #1e293b;
-    font-size: 0.95rem;
-}
-
-@media (min-width: 768px) {
-    .manual-input-large { height: 60px; padding: 0 25px; border-radius: 15px; font-size: 1.05rem; }
-}
-
-/* Common Components */
 .btn-sync-cloud {
-    background: #1e293b; color: white; border: none;
-    padding: 14px 20px; border-radius: 100px; font-weight: 800;
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 16px 30px;
+    border-radius: 100px;
+    font-weight: 800;
+    transition: 0.3s;
+    box-shadow: 0 10px 20px rgba(30, 41, 59, 0.2);
 }
 
-.btn-manual-finalize {
-    padding: 15px; border-radius: 12px;
-    background: #3b82f6; color: white; border: none; font-weight: 800;
+.btn-sync-cloud:hover { background: #0f172a; transform: scale(1.02); }
+
+/* ======================================================
+   TRACKING CONTROLS
+====================================================== */
+.drv-btn-start {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 15px;
+    font-weight: 800;
 }
 
-@media (min-width: 768px) {
-    .btn-manual-finalize { padding: 20px; border-radius: 18px; font-size: 1.1rem; }
+.drv-btn-stop {
+    background: #fff1f2;
+    color: #ef4444;
+    border: 2px solid #fecaca;
+    padding: 12px 24px;
+    border-radius: 15px;
+    font-weight: 800;
 }
-
-.drv-btn-start { background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
-.drv-btn-stop { background: #fff1f2; color: #ef4444; border: 2px solid #fecaca; padding: 12px; border-radius: 12px; font-weight: 800; }
 
 .pulse-dot {
-    width: 8px; height: 8px; background: #ef4444; border-radius: 50%;
-    display: inline-block; animation: pulse 1.5s infinite;
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
     0% { transform: scale(1); opacity: 1; }
     100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ======================================================
+   MANUAL ENTRY SECTION
+====================================================== */
+.manual-entry-section-full {
+    background: white;
+    border-radius: 30px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.manual-entry-header-dark {
+    background: #1e293b;
+    padding: 25px;
+    color: white;
+}
+
+.icon-circle-blue {
+    width: 45px;
+    height: 45px;
+    background: rgba(59, 130, 246, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    font-size: 1.25rem;
+}
+
+.manual-label-light {
+    display: block;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.manual-input-large {
+    width: 100%;
+    height: 55px;
+    padding: 0 20px;
+    border-radius: 15px;
+    border: 2px solid #f1f5f9;
+    background: #f8fafc;
+    font-weight: 700;
+    color: #1e293b;
+    transition: 0.3s;
+}
+
+.manual-input-large:focus {
+    border-color: #3b82f6;
+    background: white;
+    outline: none;
+}
+
+.btn-manual-finalize {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 18px;
+    border-radius: 15px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* ======================================================
+   RESPONSIVE TWEAKS
+====================================================== */
+@media (max-width: 768px) {
+    .bus-title-responsive { font-size: 1.5rem; }
+    .manual-title-res { font-size: 1.2rem; }
+    .drv-list-scroll { height: 320px; }
+    .small-mobile-text { font-size: 0.85rem; }
+    .extra-small-text { font-size: 0.7rem; }
+    .btn-att-pill { width: 32px; height: 32px; font-size: 0.75rem; }
+    .drv-bus-sq { width: 50px; height: 50px; font-size: 1.25rem; }
 }

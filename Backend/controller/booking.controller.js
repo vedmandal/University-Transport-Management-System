@@ -207,24 +207,37 @@ export const updateBookingStatus = async (req, res) => {
 /* ======================================================
    DRIVER – MARK ATTENDANCE
 ====================================================== */
+/* ======================================================
+   DRIVER – MARK ATTENDANCE (Updated)
+====================================================== */
 export const markAttendance = async (req, res) => {
   try {
     const { id } = req.params;
     const { attendance } = req.body;
+
+    // 1. Safety Check: If the ID isn't a valid MongoDB ObjectId
+    // (This happens if the student exists on the bus but hasn't booked a seat yet)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({
+        success: false,
+        message: "No active booking found. Please use 'Manual Boarding' for this student.",
+      });
+    }
 
     const booking = await bookingModel.findById(id);
 
     if (!booking) {
       return res.status(404).send({
         success: false,
-        message: "Booking not found",
+        message: "Booking record not found",
       });
     }
 
+    // 2. Prevent changes after the trip is submitted to Admin
     if (booking.finalized) {
       return res.status(400).send({
         success: false,
-        message: "Attendance already finalized",
+        message: "Attendance is already finalized and cannot be changed",
       });
     }
 
@@ -233,14 +246,14 @@ export const markAttendance = async (req, res) => {
 
     return res.status(200).send({
       success: true,
-      message: "Attendance marked successfully",
+      message: `Student marked as ${attendance}`,
     });
 
   } catch (error) {
     console.error("ATTENDANCE ERROR:", error);
     return res.status(500).send({
       success: false,
-      message: "Failed to mark attendance",
+      message: "Failed to update attendance",
     });
   }
 };
@@ -248,55 +261,54 @@ export const markAttendance = async (req, res) => {
 /* ======================================================
    DRIVER – SUBMIT FINAL ATTENDANCE
 ====================================================== */
+/* ======================================================
+   DRIVER – SUBMIT FINAL (Handles Approved + No-Shows)
+====================================================== */
 export const submitFinalAttendance = async (req, res) => {
   try {
     const { busId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(busId)) {
-      return res.status(400).send({
-        success: false,
-        message: "Invalid Bus ID",
-      });
-    }
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const result = await bookingModel.updateMany(
-      {
-        busId: new mongoose.Types.ObjectId(busId),
-        date: { $gte: today, $lt: tomorrow },
-        status: "approved",          // only approved bookings
-        finalized: false             // only not already finalized
-      },
+    // 1. Finalize all existing Approved bookings
+    await bookingModel.updateMany(
+      { busId, date: today, status: "approved", finalized: false },
       { finalized: true }
     );
 
-    if (result.modifiedCount === 0) {
-      return res.status(400).send({
-        success: false,
-        message: "No approved bookings found to finalize",
-      });
+    // 2. Identify students who never booked
+    const allAssigned = await userModel.find({ busId, role: "student" });
+    const todayBookings = await bookingModel.find({ busId, date: today });
+    const bookedIds = todayBookings.map(b => b.studentId.toString());
+
+    const noShowStudents = allAssigned.filter(s => !bookedIds.includes(s._id.toString()));
+
+    // 3. Create 'Absent' records for everyone who didn't book
+    if (noShowStudents.length > 0) {
+      const absentEntries = noShowStudents.map(student => ({
+        studentId: student._id,
+        busId,
+        seatNumber: 0, 
+        pickupStop: "No Booking",
+        dropStop: "No Booking",
+        date: today,
+        status: "rejected", // System rejects because they didn't book
+        attendance: "absent",
+        finalized: true
+      }));
+      await bookingModel.insertMany(absentEntries);
     }
 
     return res.status(200).send({
       success: true,
-      message: "Attendance submitted to admin successfully",
-      finalizedCount: result.modifiedCount,
+      message: "Trip finalized. Approved and No-Show data sent to Admin."
     });
 
   } catch (error) {
     console.error("FINAL SUBMIT ERROR:", error);
-    return res.status(500).send({
-      success: false,
-      message: "Failed to submit attendance",
-    });
+    return res.status(500).send({ success: false, message: "Submission failed" });
   }
 };
-
 /* ======================================================
    ADMIN – GET FINALIZED ATTENDANCE
 ====================================================== */
@@ -414,5 +426,52 @@ export const driverAddStudent = async (req, res) => {
       success: false,
       message: "Failed to add student"
     });
+  }
+};
+
+
+/* ======================================================
+   DRIVER – GET UNIFIED MANIFEST (Roster + Bookings)
+====================================================== */
+export const getUnifiedManifest = async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // 1. Get ALL students assigned to this bus
+    const roster = await userModel.find({ busId, role: "student" }).select("name email");
+
+    // 2. Get all existing bookings for today
+    const activeBookings = await bookingModel.find({
+      busId,
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    // 3. Map roster to include booking data where it exists
+    const manifest = roster.map(student => {
+      const booking = activeBookings.find(b => b.studentId.toString() === student._id.toString());
+      
+      return {
+        studentId: student,
+        hasBooked: !!booking,
+        bookingId: booking ? booking._id : null,
+        seatNumber: booking ? booking.seatNumber : "N/A",
+        status: booking ? booking.status : "no-booking",
+        attendance: booking ? booking.attendance : "absent", // Default to absent if no booking
+        pickupStop: booking ? booking.pickupStop : "N/A"
+      };
+    });
+
+    return res.status(200).send({
+      success: true,
+      manifest,
+    });
+
+  } catch (error) {
+    console.error("MANIFEST ERROR:", error);
+    return res.status(500).send({ success: false, message: "Failed to fetch manifest" });
   }
 };

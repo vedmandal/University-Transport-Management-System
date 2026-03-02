@@ -17,7 +17,9 @@ export default function DriverDashboard() {
   const [driverName, setDriverName] = useState("");
   const [routeStops, setRouteStops] = useState([]);
   const [sharing, setSharing] = useState(() => localStorage.getItem("sharing") === "true");
-  const [bookings, setBookings] = useState([]);
+  
+  // ✅ Holds Unified Manifest (Assigned Students + Their Booking Data)
+  const [manifest, setManifest] = useState([]);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [manualSeat, setManualSeat] = useState("");
@@ -39,15 +41,16 @@ export default function DriverDashboard() {
     fetchBusData();
   }, []);
 
-  const fetchBookings = async () => {
+  // ✅ Fetch data from the new Manifest endpoint
+  const fetchManifestData = async () => {
     if (!busId) return;
     try {
-      const res = await api.get(`/bookings/driver/${busId}`);
-      setBookings(res.data.bookings || []);
+      const res = await api.get(`/bookings/manifest/${busId}`);
+      setManifest(res.data.manifest || []);
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { if (busId) fetchBookings(); }, [busId]);
+  useEffect(() => { if (busId) fetchManifestData(); }, [busId]);
 
   const startTracking = () => {
     if (!socket || !busId) return;
@@ -77,19 +80,23 @@ export default function DriverDashboard() {
 
   const updateStatus = async (id, status) => {
     await api.put(`/bookings/status/${id}`, { status });
-    fetchBookings();
+    fetchManifestData(); 
   };
 
   const markAttendance = async (id, attendance) => {
+    // Safety check: Don't call API if student doesn't have a booking ID yet
+    if (!id) return alert("Student has no active booking. Please use Manual Boarding."); 
     await api.put(`/bookings/attendance/${id}`, { attendance });
-    fetchBookings();
+    fetchManifestData();
   };
 
   const submitFinal = async () => {
-    if(!window.confirm("Submit final manifest to Admin?")) return;
-    await api.post(`/bookings/finalize/${busId}`);
-    alert("Data transmitted successfully.");
-    fetchBookings();
+    if(!window.confirm("Submit final manifest? Unbooked students will be marked as ABSENT.")) return;
+    try {
+        await api.post(`/bookings/finalize/${busId}`);
+        alert("Trip data transmitted to Admin.");
+        fetchManifestData();
+    } catch (err) { alert("Submission failed."); }
   };
 
   const loadStudentOptions = async (inputValue) => {
@@ -115,11 +122,16 @@ export default function DriverDashboard() {
       });
       setSelectedStudent(null);
       setManualSeat("");
-      fetchBookings();
+      fetchManifestData();
     } catch { alert("Error adding student"); }
   };
 
   if (!busId) return <div className="drv-loading-screen">Booting Console...</div>;
+
+  // 🔍 Split Logic
+  const pendingRequests = manifest.filter(m => m.status === "pending");
+  // The On-Board list now contains Approved students AND those who didn't book (no-booking)
+  const onBoardManifest = manifest.filter(m => m.status === "approved" || m.status === "no-booking");
 
   return (
     <div className="drv-root">
@@ -169,46 +181,65 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* 📋 PARALLEL CONTAINERS */}
+        {/* 📋 MANIFEST SECTION */}
         <div className="row g-4 mb-4 mb-md-5">
+          
+          {/* COLUMN 1: PENDING APPROVALS */}
           <div className="col-12 col-lg-6">
             <div className="unified-glass-card h-100 border-top-warning">
               <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center">
                 <h6 className="fw-800 m-0 text-dark">PENDING REQUESTS</h6>
-                <span className="count-badge bg-warning">{bookings.filter(b => b.status === "pending").length}</span>
+                <span className="count-badge bg-warning">{pendingRequests.length}</span>
               </div>
               <div className="drv-list-scroll">
-                {bookings.filter(b => b.status === "pending").length === 0 && <p className="text-center text-muted mt-4">No pending requests</p>}
-                {bookings.filter(b => b.status === "pending").map(b => (
-                  <div key={b._id} className="drv-list-item-new">
+                {pendingRequests.length === 0 && <p className="text-center text-muted mt-4">No pending requests</p>}
+                {pendingRequests.map(item => (
+                  <div key={item.bookingId || item.studentId._id} className="drv-list-item-new">
                     <div className="flex-grow-1 me-2">
-                      <div className="fw-bold text-dark small-mobile-text">{b.studentId?.name}</div>
-                      <div className="text-muted extra-small-text">Seat {b.seatNumber} • {b.pickupStop}</div>
+                      <div className="fw-bold text-dark small-mobile-text">{item.studentId?.name}</div>
+                      <div className="text-muted extra-small-text">Seat {item.seatNumber} • {item.pickupStop}</div>
                     </div>
-                    <button className="btn-approve-mini" onClick={() => updateStatus(b._id, "approved")}>APPROVE</button>
+                    <button className="btn-approve-mini" onClick={() => updateStatus(item.bookingId, "approved")}>APPROVE</button>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* COLUMN 2: FULL ROSTER (Approved + Absent) */}
           <div className="col-12 col-lg-6">
             <div className="unified-glass-card h-100 border-top-blue">
               <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center">
-                <h6 className="fw-800 m-0 text-dark">ON-BOARD MANIFEST</h6>
-                <span className="count-badge bg-primary">{bookings.filter(b => b.status === "approved").length}</span>
+                <h6 className="fw-800 m-0 text-dark">FULL BUS ROSTER</h6>
+                <span className="count-badge bg-primary">{onBoardManifest.length}</span>
               </div>
               <div className="drv-list-scroll">
-                {bookings.filter(b => b.status === "approved").length === 0 && <p className="text-center text-muted mt-4">No students on board</p>}
-                {bookings.filter(b => b.status === "approved").map(b => (
-                  <div key={b._id} className={`drv-list-item-new ${b.attendance === 'present' ? 'attended-row' : b.attendance === 'absent' ? 'absent-row' : ''}`}>
+                {onBoardManifest.length === 0 && <p className="text-center text-muted mt-4">No students assigned</p>}
+                {onBoardManifest.map(item => (
+                  <div key={item.studentId?._id} className={`drv-list-item-new ${item.attendance === 'present' ? 'attended-row' : item.attendance === 'absent' ? 'absent-row' : ''}`}>
                     <div className="flex-grow-1 me-2">
-                      <div className="fw-bold text-dark small-mobile-text">{b.studentId?.name}</div>
-                      <div className="text-muted extra-small-text text-truncate" style={{maxWidth: '120px'}}>{b.pickupStop} → {b.dropStop}</div>
+                      <div className="fw-bold text-dark small-mobile-text">{item.studentId?.name}</div>
+                      <div className="text-muted extra-small-text text-truncate" style={{maxWidth: '120px'}}>
+                        {item.status === 'no-booking' ? (
+                            <span className="text-danger">App Not Used</span>
+                        ) : (
+                            `Seat ${item.seatNumber} • ${item.pickupStop}`
+                        )}
+                      </div>
                     </div>
+                    
                     <div className="d-flex gap-1 gap-md-2">
-                      <button className={`btn-att-pill p-btn ${b.attendance === 'present' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "present")}>P</button>
-                      <button className={`btn-att-pill a-btn ${b.attendance === 'absent' ? 'active' : ''}`} onClick={() => markAttendance(b._id, "absent")}>A</button>
+                      {item.status !== 'no-booking' ? (
+                        <>
+                          <button className={`btn-att-pill p-btn ${item.attendance === 'present' ? 'active' : ''}`} onClick={() => markAttendance(item.bookingId, "present")}>P</button>
+                          <button className={`btn-att-pill a-btn ${item.attendance === 'absent' ? 'active' : ''}`} onClick={() => markAttendance(item.bookingId, "absent")}>A</button>
+                        </>
+                      ) : (
+                        /* Use your existing 'absent-row' coloring logic but via a label */
+                        <span className="badge bg-light text-danger border px-2 py-1" style={{fontSize: '0.65rem', fontWeight: '800'}}>
+                            AUTO-ABSENT
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -217,19 +248,20 @@ export default function DriverDashboard() {
           </div>
         </div>
 
+        {/* ☁️ FINAL SUBMIT ACTION */}
         <div className="text-center mb-5 d-grid d-md-block px-3">
            <button className="btn-sync-cloud w-100" style={{maxWidth: '500px'}} onClick={submitFinal}>
-             <i className="bi bi-cloud-check-fill me-2"></i> SUBMIT TO ADMIN
+             <i className="bi bi-cloud-check-fill me-2"></i> SUBMIT FINAL REPORT
            </button>
         </div>
 
-        {/* 📝 FULL WIDTH MANUAL ENTRY */}
+        {/* 📝 MANUAL ENTRY */}
         <div className="manual-entry-section-full shadow-lg">
            <div className="manual-entry-header-dark p-3 p-md-4 d-flex align-items-center gap-3">
               <div className="icon-circle-blue d-none d-sm-flex"><i className="bi bi-person-plus"></i></div>
               <div>
                 <h4 className="fw-800 m-0 text-white manual-title-res">Manual Boarding</h4>
-                <p className="m-0 text-white-50 small">Register students boarding now.</p>
+                <p className="m-0 text-white-50 small">For students boarding without app booking.</p>
               </div>
            </div>
            

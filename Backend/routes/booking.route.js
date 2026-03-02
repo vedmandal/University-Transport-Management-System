@@ -4,6 +4,7 @@ import {
   getBookedSeats,
   getBusAttendance,
   getDriverBookings,
+  getUnifiedManifest, // 🔥 ADD THIS IMPORT
   updateBookingStatus,
   markAttendance,
   submitFinalAttendance,
@@ -18,84 +19,40 @@ const router = express.Router();
 /* ======================================================
    STUDENT ROUTES
 ====================================================== */
-
-// Create booking
-router.post(
-  "/create",
-  protect,
-  role("student"),
-  bookSeat
-);
-
-// Get booked seats for seat layout
-router.get(
-  "/bus/:busId",
-  protect,
-  getBookedSeats
-);
-
+router.post("/create", protect, role("student"), bookSeat);
+router.get("/bus/:busId", protect, getBookedSeats);
+router.get("/my/:busId", protect, role("student"), getMyBooking);
 
 /* ======================================================
    DRIVER ROUTES
 ====================================================== */
 
-// Get today's bookings for driver
+// 🔥 NEW: Get unified manifest (Roster + Bookings)
 router.get(
-  "/driver/:busId",
-  protect,
-  role("driver"),
-  getDriverBookings
+  "/manifest/:busId", 
+  protect, 
+  role("driver"), 
+  getUnifiedManifest
 );
+
+// Get today's bookings for driver (Keep for backwards compatibility if needed)
+router.get("/driver/:busId", protect, role("driver"), getDriverBookings);
 
 // Approve / Reject booking
-router.put(
-  "/status/:id",
-  protect,
-  role("driver"),
-  updateBookingStatus
-);
+router.put("/status/:id", protect, role("driver"), updateBookingStatus);
 
 // Mark attendance
-router.put(
-  "/attendance/:id",
-  protect,
-  role("driver"),
-  markAttendance
-);
+router.put("/attendance/:id", protect, role("driver"), markAttendance);
 
-// Submit final attendance
-router.post(
-  "/finalize/:busId",
-  protect,
-  role("driver"),
-  submitFinalAttendance
-);
+// Submit final attendance (This now handles auto-absent logic)
+router.post("/finalize/:busId", protect, role("driver"), submitFinalAttendance);
 
-
-router.get(
-  "/my/:busId",
-  protect,
-  role("student"),
-  getMyBooking
-);
-
-router.post(
-  "/driver/add/:busId",
-  protect,
-  role("driver"),
-  driverAddStudent
-);
+// Manual Boarding
+router.post("/driver/add/:busId", protect, role("driver"), driverAddStudent);
 
 /* ======================================================
    ADMIN ROUTES
 ====================================================== */
-
-// Get finalized attendance (date-wise)
-router.get(
-  "/attendance/:busId",
-  protect,
-  role("admin"),
-  getBusAttendance
-);
+router.get("/attendance/:busId", protect, role("admin"), getBusAttendance);
 
 export default router;
