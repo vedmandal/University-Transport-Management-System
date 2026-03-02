@@ -41,7 +41,6 @@ export default function DriverDashboard() {
     fetchBusData();
   }, []);
 
-  // ✅ Fetch data from the new Manifest endpoint
   const fetchManifestData = async () => {
     if (!busId) return;
     try {
@@ -84,7 +83,6 @@ export default function DriverDashboard() {
   };
 
   const markAttendance = async (id, attendance) => {
-    // Safety check: Don't call API if student doesn't have a booking ID yet
     if (!id) return alert("Student has no active booking. Please use Manual Boarding."); 
     await api.put(`/bookings/attendance/${id}`, { attendance });
     fetchManifestData();
@@ -128,10 +126,23 @@ export default function DriverDashboard() {
 
   if (!busId) return <div className="drv-loading-screen">Booting Console...</div>;
 
-  // 🔍 Split Logic
+  // 🔍 Split Logic with Dynamic Sorting
   const pendingRequests = manifest.filter(m => m.status === "pending");
-  // The On-Board list now contains Approved students AND those who didn't book (no-booking)
-  const onBoardManifest = manifest.filter(m => m.status === "approved" || m.status === "no-booking");
+  
+  const onBoardManifest = manifest
+    .filter(m => m.status === "approved" || m.status === "no-booking")
+    .sort((a, b) => {
+      // 1. Prioritize Attendance: Present students always on top
+      if (a.attendance === 'present' && b.attendance !== 'present') return -1;
+      if (a.attendance !== 'present' && b.attendance === 'present') return 1;
+
+      // 2. Prioritize Status: Approved bookings above No-Bookings
+      if (a.status === 'approved' && b.status === 'no-booking') return -1;
+      if (a.status === 'no-booking' && b.status === 'approved') return 1;
+
+      // 3. Keep alphabetical order for similar groups
+      return (a.studentId?.name || "").localeCompare(b.studentId?.name || "");
+    });
 
   return (
     <div className="drv-root">
@@ -157,7 +168,6 @@ export default function DriverDashboard() {
 
       <div className="container py-3 py-md-5 drv-content-layer">
         
-        {/* 📊 TOP CONTROL STRIP */}
         <div className="bento-header-drv mb-4 mb-md-5">
           <div className="row align-items-center g-3">
             <div className="col-12 col-md-6 d-flex align-items-center gap-3 gap-md-4">
@@ -181,7 +191,6 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* 📋 MANIFEST SECTION */}
         <div className="row g-4 mb-4 mb-md-5">
           
           {/* COLUMN 1: PENDING APPROVALS */}
@@ -194,7 +203,7 @@ export default function DriverDashboard() {
               <div className="drv-list-scroll">
                 {pendingRequests.length === 0 && <p className="text-center text-muted mt-4">No pending requests</p>}
                 {pendingRequests.map(item => (
-                  <div key={item.bookingId || item.studentId._id} className="drv-list-item-new">
+                  <div key={item.bookingId || item.studentId?._id} className="drv-list-item-new">
                     <div className="flex-grow-1 me-2">
                       <div className="fw-bold text-dark small-mobile-text">{item.studentId?.name}</div>
                       <div className="text-muted extra-small-text">Seat {item.seatNumber} • {item.pickupStop}</div>
@@ -206,7 +215,7 @@ export default function DriverDashboard() {
             </div>
           </div>
 
-          {/* COLUMN 2: FULL ROSTER (Approved + Absent) */}
+          {/* COLUMN 2: FULL ROSTER (Sorted: Present > Approved > Absent) */}
           <div className="col-12 col-lg-6">
             <div className="unified-glass-card h-100 border-top-blue">
               <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center">
@@ -220,8 +229,9 @@ export default function DriverDashboard() {
                     <div className="flex-grow-1 me-2">
                       <div className="fw-bold text-dark small-mobile-text">{item.studentId?.name}</div>
                       <div className="text-muted extra-small-text text-truncate" style={{maxWidth: '120px'}}>
-                        {item.status === 'no-booking' ? (
-                            <span className="text-danger">App Not Used</span>
+                        {/* Handle negative seat numbers or no-booking status */}
+                        {item.status === 'no-booking' || item.seatNumber < 1 ? (
+                            <span className="text-danger">No Seat Reserved</span>
                         ) : (
                             `Seat ${item.seatNumber} • ${item.pickupStop}`
                         )}
@@ -235,7 +245,6 @@ export default function DriverDashboard() {
                           <button className={`btn-att-pill a-btn ${item.attendance === 'absent' ? 'active' : ''}`} onClick={() => markAttendance(item.bookingId, "absent")}>A</button>
                         </>
                       ) : (
-                        /* Use your existing 'absent-row' coloring logic but via a label */
                         <span className="badge bg-light text-danger border px-2 py-1" style={{fontSize: '0.65rem', fontWeight: '800'}}>
                             AUTO-ABSENT
                         </span>
@@ -248,14 +257,12 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* ☁️ FINAL SUBMIT ACTION */}
         <div className="text-center mb-5 d-grid d-md-block px-3">
            <button className="btn-sync-cloud w-100" style={{maxWidth: '500px'}} onClick={submitFinal}>
              <i className="bi bi-cloud-check-fill me-2"></i> SUBMIT FINAL REPORT
            </button>
         </div>
 
-        {/* 📝 MANUAL ENTRY */}
         <div className="manual-entry-section-full shadow-lg">
            <div className="manual-entry-header-dark p-3 p-md-4 d-flex align-items-center gap-3">
               <div className="icon-circle-blue d-none d-sm-flex"><i className="bi bi-person-plus"></i></div>

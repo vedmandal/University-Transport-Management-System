@@ -283,30 +283,41 @@ export const submitFinalAttendance = async (req, res) => {
 
     const noShowStudents = allAssigned.filter(s => !bookedIds.includes(s._id.toString()));
 
-    // 3. Create 'Absent' records for everyone who didn't book
+    // 3. Create 'Absent' records
     if (noShowStudents.length > 0) {
-      const absentEntries = noShowStudents.map(student => ({
+      const absentEntries = noShowStudents.map((student, index) => ({
         studentId: student._id,
         busId,
-        seatNumber: 0, 
-        pickupStop: "No Booking",
-        dropStop: "No Booking",
+        // 🔥 FIX: Use a unique negative number for seatNumber to avoid index collision
+        // Seat 0, -1, -2, etc. will not conflict with real seats (1, 2, 3...)
+        seatNumber: -(index + 1), 
+        pickupStop: 'No Booking',
+        dropStop: 'No Booking',
         date: today,
-        status: "rejected", // System rejects because they didn't book
-        attendance: "absent",
+        status: 'rejected',
+        attendance: 'absent',
         finalized: true
       }));
-      await bookingModel.insertMany(absentEntries);
+
+      // Use ordered: false so if one fails, others still proceed
+      await bookingModel.insertMany(absentEntries, { ordered: false });
     }
 
     return res.status(200).send({
       success: true,
-      message: "Trip finalized. Approved and No-Show data sent to Admin."
+      message: "Trip finalized successfully."
     });
 
   } catch (error) {
+    // If it's a duplicate error, it likely means we already finalized today
+    if (error.code === 11000) {
+      return res.status(200).send({
+        success: true,
+        message: "Attendance was already finalized."
+      });
+    }
     console.error("FINAL SUBMIT ERROR:", error);
-    return res.status(500).send({ success: false, message: "Submission failed" });
+    return res.status(500).send({ success: false, message: "Failed to submit" });
   }
 };
 /* ======================================================
