@@ -270,9 +270,10 @@ export const submitFinalAttendance = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 1. Finalize all existing Approved bookings
+    // 1. Finalize EVERY booking for this bus today (Approved, Pending, or Rejected)
+    // 🔥 CHANGE: Removed 'status: "approved"' so that ALL records get locked
     await bookingModel.updateMany(
-      { busId, date: today, status: "approved", finalized: false },
+      { busId, date: today, finalized: false },
       { finalized: true }
     );
 
@@ -283,13 +284,11 @@ export const submitFinalAttendance = async (req, res) => {
 
     const noShowStudents = allAssigned.filter(s => !bookedIds.includes(s._id.toString()));
 
-    // 3. Create 'Absent' records
+    // 3. Create 'Absent' records for the no-shows
     if (noShowStudents.length > 0) {
       const absentEntries = noShowStudents.map((student, index) => ({
         studentId: student._id,
         busId,
-        // 🔥 FIX: Use a unique negative number for seatNumber to avoid index collision
-        // Seat 0, -1, -2, etc. will not conflict with real seats (1, 2, 3...)
         seatNumber: -(index + 1), 
         pickupStop: 'No Booking',
         dropStop: 'No Booking',
@@ -299,7 +298,6 @@ export const submitFinalAttendance = async (req, res) => {
         finalized: true
       }));
 
-      // Use ordered: false so if one fails, others still proceed
       await bookingModel.insertMany(absentEntries, { ordered: false });
     }
 
@@ -309,7 +307,6 @@ export const submitFinalAttendance = async (req, res) => {
     });
 
   } catch (error) {
-    // If it's a duplicate error, it likely means we already finalized today
     if (error.code === 11000) {
       return res.status(200).send({
         success: true,
