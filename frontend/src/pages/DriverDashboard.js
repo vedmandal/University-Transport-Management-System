@@ -18,7 +18,6 @@ export default function DriverDashboard() {
   const [routeStops, setRouteStops] = useState([]);
   const [sharing, setSharing] = useState(() => localStorage.getItem("sharing") === "true");
   
-  // ✅ Holds Unified Manifest (Assigned Students + Their Booking Data)
   const [manifest, setManifest] = useState([]);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -88,12 +87,20 @@ export default function DriverDashboard() {
     fetchManifestData();
   };
 
+  // ✅ FIXED: Forced local state update to clear roster immediately
   const submitFinal = async () => {
     if(!window.confirm("Submit final manifest? Unbooked students will be marked as ABSENT.")) return;
     try {
-        await api.post(`/bookings/finalize/${busId}`);
-        alert("Trip data transmitted to Admin.");
-        fetchManifestData(); // This will now clear the list because items are finalized
+        const res = await api.post(`/bookings/finalize/${busId}`);
+        if (res.data.success) {
+          alert("Trip data transmitted to Admin.");
+          
+          // 🔥 Force UI update: Mark all items as finalized so filters catch them
+          setManifest(prev => prev.map(item => ({ ...item, finalized: true })));
+          
+          // Sync with database
+          fetchManifestData();
+        }
     } catch (err) { alert("Submission failed."); }
   };
 
@@ -126,8 +133,7 @@ export default function DriverDashboard() {
 
   if (!busId) return <div className="drv-loading-screen">Booting Console...</div>;
 
-  // 🔍 Split Logic with Dynamic Sorting & Finalization Check
-  // We hide students who have already been "finalized" (sent to admin)
+  // 🔍 Filter Logic: Only show students who are NOT finalized
   const pendingRequests = manifest.filter(m => m.status === "pending" && !m.finalized);
   
   const onBoardManifest = manifest
@@ -144,7 +150,6 @@ export default function DriverDashboard() {
       return (a.studentId?.name || "").localeCompare(b.studentId?.name || "");
     });
 
-  // Check if today's work is complete
   const isTripDone = manifest.length > 0 && onBoardManifest.length === 0 && pendingRequests.length === 0;
 
   return (
@@ -171,7 +176,6 @@ export default function DriverDashboard() {
 
       <div className="container py-3 py-md-5 drv-content-layer">
         
-        {/* BUS INFO HEADER */}
         <div className="bento-header-drv mb-4 mb-md-5">
           <div className="row align-items-center g-3">
             <div className="col-12 col-md-6 d-flex align-items-center gap-3 gap-md-4">
@@ -195,19 +199,17 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* 🏁 TRIP COMPLETED STATE (Shows when everything is finalized) */}
         {isTripDone && (
           <div className="text-center p-5 mb-5 unified-glass-card border-top-blue animate__animated animate__fadeIn">
             <div className="display-4 text-success mb-3"><i className="bi bi-check-circle-fill"></i></div>
             <h4 className="fw-800">Trip Finalized!</h4>
             <p className="text-muted">Today's records have been securely sent to the Admin.</p>
             <button className="btn btn-outline-primary btn-sm rounded-pill px-4" onClick={fetchManifestData}>
-               Check for new requests
+               Refresh Status
             </button>
           </div>
         )}
 
-        {/* 📋 MANIFEST SECTION */}
         {!isTripDone && (
           <div className="row g-4 mb-4 mb-md-5">
             <div className="col-12 col-lg-6">
@@ -269,7 +271,6 @@ export default function DriverDashboard() {
           </div>
         )}
 
-        {/* FINAL SUBMIT ACTION */}
         {!isTripDone && manifest.length > 0 && (
           <div className="text-center mb-5 d-grid d-md-block px-3">
              <button className="btn-sync-cloud w-100" style={{maxWidth: '500px'}} onClick={submitFinal}>
@@ -278,7 +279,6 @@ export default function DriverDashboard() {
           </div>
         )}
 
-        {/* MANUAL ENTRY */}
         <div className="manual-entry-section-full shadow-lg">
            <div className="manual-entry-header-dark p-3 p-md-4 d-flex align-items-center gap-3">
               <div className="icon-circle-blue d-none d-sm-flex"><i className="bi bi-person-plus"></i></div>
