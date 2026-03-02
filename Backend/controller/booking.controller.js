@@ -449,16 +449,13 @@ export const getUnifiedManifest = async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    // 1. Get ALL students assigned to this bus
     const roster = await userModel.find({ busId, role: "student" }).select("name email");
 
-    // 2. Get all existing bookings for today
     const activeBookings = await bookingModel.find({
       busId,
       date: { $gte: today, $lt: tomorrow }
     });
 
-    // 3. Map roster to include booking data where it exists
     const manifest = roster.map(student => {
       const booking = activeBookings.find(b => b.studentId.toString() === student._id.toString());
       
@@ -468,8 +465,10 @@ export const getUnifiedManifest = async (req, res) => {
         bookingId: booking ? booking._id : null,
         seatNumber: booking ? booking.seatNumber : "N/A",
         status: booking ? booking.status : "no-booking",
-        attendance: booking ? booking.attendance : "absent", // Default to absent if no booking
-        pickupStop: booking ? booking.pickupStop : "N/A"
+        attendance: booking ? booking.attendance : "absent",
+        pickupStop: booking ? booking.pickupStop : "N/A",
+        // 🔥 THIS IS THE ONLY LINE YOU WERE MISSING:
+        finalized: booking ? booking.finalized : false 
       };
     });
 
