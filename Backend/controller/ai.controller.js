@@ -501,7 +501,7 @@ export const handleAICommand = async (req, res) => {
 
       // 2. Initialize Model with Tools
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash", // Since you want to use the 2.x series from your last project
+        model: "gemini-flash-latest", // Since you want to use the 2.x series from your last project
         tools: toolConfig 
     });
 
@@ -510,12 +510,7 @@ export const handleAICommand = async (req, res) => {
           history: history || [], // Frontend sends array of {role, parts}
       });
       
-      const systemInstruction = `You are the KRMU Transit Assistant. 
-      Current User ID: ${userId}, Role: ${userRole}. 
-      Today's Date: ${new Date().toLocaleDateString()}.
-      Strictly follow role-based permissions. If a user asks for an action 
-      outside their role (e.g., Student asking to delete route), politely refuse.`;
-
+      const systemInstruction = `Role: KRMU Fleet Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Use tools only when necessary. Be brief.`;
       // 4. Send the message
       let result = await chat.sendMessage(`${systemInstruction}\nUser: ${prompt}`);
       let response = result.response;
@@ -552,6 +547,12 @@ export const handleAICommand = async (req, res) => {
 
   } catch (error) {
       console.error("AI Command Error:", error);
+      if (error.status === 429) {
+        return res.status(429).json({ 
+            success: false, 
+            message: "KRMU AI is cooling down. Please wait 30 seconds before the next command." 
+        });
+    }
       res.status(500).json({ 
           success: false, 
           message: "I encountered an error processing that request. Please try again." 
