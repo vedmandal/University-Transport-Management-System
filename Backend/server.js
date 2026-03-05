@@ -17,7 +17,7 @@ import busRoutes from "./routes/bus.route.js";
 import bookingRoutes from "./routes/booking.route.js";
 import tripRoutes from "./routes/trip.route.js";
 import { socketHandler } from "./socket.js";
-
+import aiRoute from "./routes/ai.route.js"
 const app = express();
 const server = http.createServer(app);
 
@@ -77,6 +77,7 @@ app.use("/api/routes", routeRoutes);
 app.use("/api/bus", busRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/trips", tripRoutes);
+app.use("/api/ai",aiRoute);
 
 /* =========================
    SOCKET
