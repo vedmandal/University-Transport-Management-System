@@ -493,69 +493,50 @@ const toolConfig = [{
 // --------------------------------------------------------
 // 3. THE MASTER HANDLER
 // --------------------------------------------------------
+// Add this helper at the very top of your file
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
 export const handleAICommand = async (req, res) => {
   try {
-      // 1. Accept 'history' from frontend to allow back-and-forth conversation
       const { prompt, history } = req.body; 
       const { id: userId, role: userRole } = req.user; 
 
-      // 2. Initialize Model with Tools
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash", // Since you want to use the 2.x series from your last project
-        tools: toolConfig 
-    });
-
-      // 3. Start Chat with History
-      const chat = model.startChat({
-          history: history || [], // Frontend sends array of {role, parts}
+          model: "gemini-2.0-flash", 
+          tools: toolConfig 
       });
+
+      const chat = model.startChat({ history: history || [] });
       
-      const systemInstruction = `Role: KRMU Fleet Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Use tools only when necessary. Be brief.`;
-      // 4. Send the message
+      const systemInstruction = `You are the KRMU Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Be concise.`;
+
       let result = await chat.sendMessage(`${systemInstruction}\nUser: ${prompt}`);
       let response = result.response;
       
-      // 5. THE TOOL LOOP (Handles multiple or sequential function calls)
       let call = response.candidates[0].content.parts.find(p => p.functionCall);
 
       while (call) {
           const { name, args } = call.functionCall;
-
-          // Execute the action from our registry
           const actionResult = await aiActions[name]({ ...args, userId, userRole });
 
-          // Send the tool result back to Gemini so it can generate a final verbal response
+          // --- ADD THIS DELAY HERE ---
+          // This gives the API 1 second to breathe between tool calls
+          await delay(1000); 
+
           result = await chat.sendMessage([{
-              functionResponse: {
-                  name,
-                  response: actionResult
-              }
+              functionResponse: { name, response: actionResult }
           }]);
 
           response = result.response;
-          // Check if Gemini wants to call another tool based on the last result
           call = response.candidates[0].content.parts.find(p => p.functionCall);
       }
 
-      // 6. Return final natural language message + Updated History
-      // We return the text and the updated history so the frontend can store it
-      res.json({ 
-          success: true, 
-          message: response.text(),
-          // Optional: return updated history if you want the backend to manage it
-      });
+      res.json({ success: true, message: response.text() });
 
   } catch (error) {
-      console.error("AI Command Error:", error);
       if (error.status === 429) {
-        return res.status(429).json({ 
-            success: false, 
-            message: "KRMU AI is cooling down. Please wait 30 seconds before the next command." 
-        });
-    }
-      res.status(500).json({ 
-          success: false, 
-          message: "I encountered an error processing that request. Please try again." 
-      });
+          return res.status(429).json({ success: false, message: "AI Quota reached. Please wait 1 minute." });
+      }
+      res.status(500).json({ success: false, message: "AI Error. Try again." });
   }
 };
