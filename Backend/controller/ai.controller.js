@@ -499,39 +499,35 @@ export const handleAICommand = async (req, res) => {
       const { prompt, history } = req.body;
       const { id: userId, role: userRole } = req.user;
   
-      // 1. USE THE 2026 MODEL SHOWN IN YOUR CHART
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash", // Updated for 2026
+        // Use the preview string which is most stable for 2026 Free Tier
+        model: "gemini-3-flash-preview", 
         tools: toolConfig 
       });
   
       const chat = model.startChat({ 
         history: history || [],
-        // 2. Reduce "Thinking" to stay under Free Tier limits
         generationConfig: {
           temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
+          // IN 2026: MINIMAL thinking level prevents quota exhaustion
+          thinkingLevel: "minimal" 
         }
       });
   
-      // 3. Keep this SHORT to save tokens (TPM Limit)
-      const systemMsg = `KRMU Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Use tools for transport.`;
-  
+      const systemMsg = `Role: KRMU Admin Assistant. Be brief.`;
       let result = await chat.sendMessage(`${systemMsg}\nUser: ${prompt}`);
       let response = result.response;
+      
       let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
-  
       let loopCount = 0;
+  
       while (call && loopCount < 3) {
         loopCount++;
         const { name, args } = call.functionCall;
-        
-        // Execute local DB tool
         const actionResult = await aiActions[name]({ ...args, userId, userRole });
   
-        // 4. ESSENTIAL: 2-second pause to prevent 429 Errors
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // DELAY: Required for 2026 Free Tier (RPM protection)
+        await new Promise(res => setTimeout(res, 2000));
   
         result = await chat.sendMessage([{
           functionResponse: { name, response: actionResult }
@@ -544,14 +540,12 @@ export const handleAICommand = async (req, res) => {
       res.json({ success: true, message: response.text() });
   
     } catch (error) {
-      // 5. SEE THE REAL ERROR IN YOUR RENDER LOGS
-      console.error("DETAILED AI ERROR:", error);
-  
-      // Friendly message for the user
-      const errorMsg = error.status === 429 
-        ? "AI is busy. Please wait 1 minute." 
-        : "AI connection issue. Checking system...";
-  
-      res.status(error.status || 500).json({ success: false, message: errorMsg });
+      // This logs the specific reason (like 'Model Not Found') in Render logs
+      console.error("DEBUG AI ERROR:", error.message); 
+      
+      res.status(500).json({ 
+        success: false, 
+        message: "AI Busy. Refresh and try 'Hi' in 30 seconds." 
+      });
     }
   };
