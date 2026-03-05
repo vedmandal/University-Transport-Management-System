@@ -502,7 +502,7 @@ export const handleAICommand = async (req, res) => {
       const { id: userId, role: userRole } = req.user; 
 
       const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.0-flash", 
+        model: "gemini-3-flash", 
           tools: toolConfig 
       });
 
