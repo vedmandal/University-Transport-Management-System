@@ -492,53 +492,75 @@ const toolConfig = [{
 
 // --------------------------------------------------------
 // 3. THE MASTER HANDLER
-// --------------------------------------------------------
 export const handleAICommand = async (req, res) => {
     try {
-      const { prompt, history } = req.body;
-      const { id: userId, role: userRole } = req.user;
-  
-      // Use the 2026 stable model name
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-3.1-flash-lite-preview",
-        tools: toolConfig 
-      });
-  
-      // --- FIX STARTS HERE ---
-      // 1. Filter out any invalid history items
-      let cleanHistory = (history || []).filter(item => item.role && item.parts);
-  
-      // 2. FORCE: First message must be 'user'. If it's 'model', remove it.
-      if (cleanHistory.length > 0 && cleanHistory[0].role === 'model') {
-        cleanHistory.shift();
-      }
-      
-      // 3. Ensure alternating roles (User -> Model -> User)
-      // If the last message was 'user', Google expects 'model'. 
-      // Since we are about to send a NEW 'user' message, the last history item MUST be 'model'.
-      if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
-        cleanHistory.pop(); // Remove the trailing user message to avoid 'user follows user' error
-      }
-      // --- FIX ENDS HERE ---
-  
-      const chat = model.startChat({ 
-        history: cleanHistory,
-        generationConfig: { temperature: 0.7 }
-      });
-  
-      const systemMsg = `Role: KRMU Admin Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}.`;
-      
-      // Send the prompt with the system instruction
-      let result = await chat.sendMessage(`${systemMsg}\nUser: ${prompt}`);
-      let response = result.response;
-      
-      // ... rest of your while loop (with the delay we added earlier) ...
-      // Make sure to use await new Promise(res => setTimeout(res, 2000)); inside the loop!
-  
-      res.json({ success: true, message: response.text() });
-  
+        const { prompt, history } = req.body;
+        const { id: userId, role: userRole } = req.user;
+
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-3.1-flash-lite-preview",
+            tools: toolConfig 
+        });
+
+        // 1. Clean History (Role Validation)
+        let cleanHistory = (history || []).filter(item => item.role && item.parts);
+        if (cleanHistory.length > 0 && cleanHistory[0].role === 'model') {
+            cleanHistory.shift();
+        }
+        if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
+            cleanHistory.pop();
+        }
+
+        const chat = model.startChat({ 
+            history: cleanHistory,
+            generationConfig: { temperature: 0.7 }
+        });
+
+        // 2. Initial Message
+        const systemMsg = `Role: KRMU Admin Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Use tools for bus/route tasks.`;
+        let result = await chat.sendMessage(`${systemMsg}\nUser: ${prompt}`);
+        let response = result.response;
+        
+        // 3. THE TOOL LOOP (This is what was missing/broken)
+        let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
+        let loopCount = 0;
+
+        while (call && loopCount < 5) { // Limit loops to 5 for safety
+            loopCount++;
+            const { name, args } = call.functionCall;
+            
+            console.log(`Executing Tool: ${name}`, args);
+
+            // Execute the actual database function
+            // Ensure aiActions[name] exists and is an async function
+            const actionResult = await aiActions[name]({ ...args, userId, userRole });
+
+            // 4. RATE LIMIT DELAY (Critical for Free Tier 2026)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Send tool result back to Gemini so it can generate a text summary
+            result = await chat.sendMessage([{
+                functionResponse: { name, response: actionResult }
+            }]);
+
+            response = result.response;
+            // Check if Gemini wants to call ANOTHER tool
+            call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
+        }
+
+        // 5. Final Response
+        // After tools are done, Gemini generates the final text (e.g., "I have added the route...")
+        const finalMessage = response.text();
+        res.json({ success: true, message: finalMessage });
+
     } catch (error) {
-      console.error("DETAILED AI ERROR:", error.message);
-      res.status(500).json({ success: false, message: "AI Sync Error. Try again." });
+        console.error("DETAILED AI ERROR:", error.message);
+        
+        // Specific message for Quota/Rate limits
+        const userFriendlyMessage = error.message.includes("429") 
+            ? "AI is a bit busy (Rate Limit). Please wait 30 seconds." 
+            : "AI Sync Error. Please try a simpler command.";
+
+        res.status(500).json({ success: false, message: userFriendlyMessage });
     }
-  };
+};
