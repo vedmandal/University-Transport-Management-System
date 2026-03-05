@@ -500,7 +500,7 @@ export const handleAICommand = async (req, res) => {
   
       // Use the 2026 stable model name
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash-preview", 
+        model: "gemini-3.1-flash-lite-preview",
         tools: toolConfig 
       });
   
