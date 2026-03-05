@@ -493,59 +493,52 @@ const toolConfig = [{
 // --------------------------------------------------------
 // 3. THE MASTER HANDLER
 // --------------------------------------------------------
-// Add this helper at the very top of your file
 export const handleAICommand = async (req, res) => {
     try {
       const { prompt, history } = req.body;
       const { id: userId, role: userRole } = req.user;
   
+      // Use the 2026 stable model name
       const model = genAI.getGenerativeModel({ 
-        // Use the preview string which is most stable for 2026 Free Tier
         model: "gemini-3-flash-preview", 
         tools: toolConfig 
       });
   
+      // --- FIX STARTS HERE ---
+      // 1. Filter out any invalid history items
+      let cleanHistory = (history || []).filter(item => item.role && item.parts);
+  
+      // 2. FORCE: First message must be 'user'. If it's 'model', remove it.
+      if (cleanHistory.length > 0 && cleanHistory[0].role === 'model') {
+        cleanHistory.shift();
+      }
+      
+      // 3. Ensure alternating roles (User -> Model -> User)
+      // If the last message was 'user', Google expects 'model'. 
+      // Since we are about to send a NEW 'user' message, the last history item MUST be 'model'.
+      if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
+        cleanHistory.pop(); // Remove the trailing user message to avoid 'user follows user' error
+      }
+      // --- FIX ENDS HERE ---
+  
       const chat = model.startChat({ 
-        history: history || [],
-        generationConfig: {
-          temperature: 0.7,
-          // IN 2026: MINIMAL thinking level prevents quota exhaustion
-          thinkingLevel: "minimal" 
-        }
+        history: cleanHistory,
+        generationConfig: { temperature: 0.7 }
       });
   
-      const systemMsg = `Role: KRMU Admin Assistant. Be brief.`;
+      const systemMsg = `Role: KRMU Admin Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}.`;
+      
+      // Send the prompt with the system instruction
       let result = await chat.sendMessage(`${systemMsg}\nUser: ${prompt}`);
       let response = result.response;
       
-      let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
-      let loopCount = 0;
-  
-      while (call && loopCount < 3) {
-        loopCount++;
-        const { name, args } = call.functionCall;
-        const actionResult = await aiActions[name]({ ...args, userId, userRole });
-  
-        // DELAY: Required for 2026 Free Tier (RPM protection)
-        await new Promise(res => setTimeout(res, 2000));
-  
-        result = await chat.sendMessage([{
-          functionResponse: { name, response: actionResult }
-        }]);
-  
-        response = result.response;
-        call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
-      }
+      // ... rest of your while loop (with the delay we added earlier) ...
+      // Make sure to use await new Promise(res => setTimeout(res, 2000)); inside the loop!
   
       res.json({ success: true, message: response.text() });
   
     } catch (error) {
-      // This logs the specific reason (like 'Model Not Found') in Render logs
-      console.error("DEBUG AI ERROR:", error.message); 
-      
-      res.status(500).json({ 
-        success: false, 
-        message: "AI Busy. Refresh and try 'Hi' in 30 seconds." 
-      });
+      console.error("DETAILED AI ERROR:", error.message);
+      res.status(500).json({ success: false, message: "AI Sync Error. Try again." });
     }
   };
