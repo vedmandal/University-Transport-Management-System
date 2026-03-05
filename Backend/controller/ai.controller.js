@@ -494,49 +494,64 @@ const toolConfig = [{
 // 3. THE MASTER HANDLER
 // --------------------------------------------------------
 // Add this helper at the very top of your file
-const delay = (ms) => new Promise(res => setTimeout(res, ms));
-
 export const handleAICommand = async (req, res) => {
-  try {
-      const { prompt, history } = req.body; 
-      const { id: userId, role: userRole } = req.user; 
-
+    try {
+      const { prompt, history } = req.body;
+      const { id: userId, role: userRole } = req.user;
+  
+      // 1. USE THE 2026 MODEL SHOWN IN YOUR CHART
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash", 
-          tools: toolConfig 
+        model: "gemini-3-flash", // Updated for 2026
+        tools: toolConfig 
       });
-
-      const chat = model.startChat({ history: history || [] });
-      
-      const systemInstruction = `You are the KRMU Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Be concise.`;
-
-      let result = await chat.sendMessage(`${systemInstruction}\nUser: ${prompt}`);
+  
+      const chat = model.startChat({ 
+        history: history || [],
+        // 2. Reduce "Thinking" to stay under Free Tier limits
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.8,
+          topK: 40,
+        }
+      });
+  
+      // 3. Keep this SHORT to save tokens (TPM Limit)
+      const systemMsg = `KRMU Assistant. Date: ${new Date().toLocaleDateString()}. Admin: ${userId}. Use tools for transport.`;
+  
+      let result = await chat.sendMessage(`${systemMsg}\nUser: ${prompt}`);
       let response = result.response;
-      
-      let call = response.candidates[0].content.parts.find(p => p.functionCall);
-
-      while (call) {
-          const { name, args } = call.functionCall;
-          const actionResult = await aiActions[name]({ ...args, userId, userRole });
-
-          // --- ADD THIS DELAY HERE ---
-          // This gives the API 1 second to breathe between tool calls
-          await delay(1000); 
-
-          result = await chat.sendMessage([{
-              functionResponse: { name, response: actionResult }
-          }]);
-
-          response = result.response;
-          call = response.candidates[0].content.parts.find(p => p.functionCall);
+      let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
+  
+      let loopCount = 0;
+      while (call && loopCount < 3) {
+        loopCount++;
+        const { name, args } = call.functionCall;
+        
+        // Execute local DB tool
+        const actionResult = await aiActions[name]({ ...args, userId, userRole });
+  
+        // 4. ESSENTIAL: 2-second pause to prevent 429 Errors
+        await new Promise(resolve => setTimeout(resolve, 2000));
+  
+        result = await chat.sendMessage([{
+          functionResponse: { name, response: actionResult }
+        }]);
+  
+        response = result.response;
+        call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
       }
-
+  
       res.json({ success: true, message: response.text() });
-
-  } catch (error) {
-      if (error.status === 429) {
-          return res.status(429).json({ success: false, message: "AI Quota reached. Please wait 1 minute." });
-      }
-      res.status(500).json({ success: false, message: "AI Error. Try again." });
-  }
-};
+  
+    } catch (error) {
+      // 5. SEE THE REAL ERROR IN YOUR RENDER LOGS
+      console.error("DETAILED AI ERROR:", error);
+  
+      // Friendly message for the user
+      const errorMsg = error.status === 429 
+        ? "AI is busy. Please wait 1 minute." 
+        : "AI connection issue. Checking system...";
+  
+      res.status(error.status || 500).json({ success: false, message: errorMsg });
+    }
+  };
