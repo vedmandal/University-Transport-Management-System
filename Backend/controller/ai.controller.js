@@ -501,9 +501,9 @@ export const handleAICommand = async (req, res) => {
 
       // 2. Initialize Model with Tools
       const model = genAI.getGenerativeModel({ 
-          model: "gemini-1.5-flash", 
-          tools: toolConfig 
-      });
+        model: "gemini-2.0-flash", // Since you want to use the 2.x series from your last project
+        tools: toolConfig 
+    });
 
       // 3. Start Chat with History
       const chat = model.startChat({
