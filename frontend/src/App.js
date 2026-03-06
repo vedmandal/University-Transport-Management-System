@@ -27,7 +27,7 @@ import ChangePassword from "./pages/ChangePassword";
 
 /* 🛠️ Admin Pages */
 import AdminLayout from "./pages/Admin/AdminLayout";
-import AddBus from "./pages/AdminDashboard"; // Note: Ensure this path matches your folder
+import AddBus from "./pages/AdminDashboard"; 
 import AddDriver from "./pages/Admin/AddDriver";
 import AddRoute from "./pages/Admin/AddRoute";
 import AdminTrackBuses from "./pages/Admin/AdminTrackBuses";
@@ -56,12 +56,14 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 /* --------------------------------------------------------------------------
    🤖 AI WIDGET VISIBILITY CONTROL
-   This ensures the AI phone widget only appears when an Admin is logged in.
+   The widget only appears if a user is logged in (token exists).
+   It remains hidden on Home, Login, and Register pages.
 -------------------------------------------------------------------------- */
-const AdminAIWrapper = () => {
-  const { role, token } = useContext(AuthContext);
+const GlobalAIWrapper = () => {
+  const { token } = useContext(AuthContext);
   
-  if (token && role?.toLowerCase() === "admin") {
+  // Only render the widget if the user is authenticated
+  if (token) {
     return <AIChatWidget />;
   }
   return null;
@@ -73,13 +75,13 @@ const AdminAIWrapper = () => {
 export default function App() {
   return (
     <AuthProvider>
-      {/* AIProvider wraps the entire app so history persists between pages */}
+      {/* AIProvider wraps everything to maintain chat history across navigation */}
       <AIProvider>
         <BrowserRouter>
           <ToastContainer position="top-right" autoClose={3000} />
 
           <Routes>
-            {/* 🏠 Public Routes */}
+            {/* 🏠 Public Routes (No Chat shown here) */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -132,7 +134,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              {/* Default Admin page is Tracking */}
               <Route index element={<Navigate to="track" replace />} />
               <Route path="add-bus" element={<AddBus />} />
               <Route path="track" element={<AdminTrackBuses />} />
@@ -149,8 +150,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
-          {/* 📱 Floating AI Assistant (Always on top if Admin) */}
-          <AdminAIWrapper />
+          {/* 📱 Floating AI Assistant (Visible role-wise after login) */}
+          <GlobalAIWrapper />
           
         </BrowserRouter>
       </AIProvider>

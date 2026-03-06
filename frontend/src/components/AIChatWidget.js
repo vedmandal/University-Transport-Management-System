@@ -1,21 +1,56 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react'; // Added useContext
 import { useAI } from '../context/AIContext';
-import { MessageSquare, X, Send, Bot, User, Volume2, VolumeX, Mic, Square } from 'lucide-react'; 
+import { AuthContext } from '../context/AuthContext'; // Added AuthContext
+import { MessageSquare, X, Send, Bot, User, Volume2, VolumeX, Mic, Square, ShieldCheck, Truck, Users } from 'lucide-react'; 
 import './AIChatWidget.css';
 
 const AIChatWidget = () => {
+  const { role, user } = useContext(AuthContext); // Get user info from your Auth provider
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isMuted, setIsMuted] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false); // Track if AI is currently talking
+  const [isSpeaking, setIsSpeaking] = useState(false); 
   const { messages, askAI, loading } = useAI();
   const chatEndRef = useRef(null);
+
+  // --- 0. ROLE-BASED UI CONFIGURATION ---
+  const getRoleConfig = () => {
+    const userRole = role?.toLowerCase() || 'student';
+    const configs = {
+      admin: {
+        label: "Admin Copilot",
+        color: "#dc2626", // Red
+        icon: <ShieldCheck size={18} />,
+        welcome: `नमस्ते Admin ${user?.name || ''}! How can I help with fleet management?`
+      },
+      driver: {
+        label: "Driver Assistant",
+        color: "#16a34a", // Green
+        icon: <Truck size={18} />,
+        welcome: "नमस्ते! Today's manifest is ready. Ask me to see your passenger list."
+      },
+      parent: {
+        label: "Parent Support",
+        color: "#ea580c", // Orange
+        icon: <Users size={18} />,
+        welcome: "नमस्ते! I can help you track your child's bus or change your password."
+      },
+      student: {
+        label: "Student Helper",
+        color: "#2563eb", // Blue
+        icon: <Bot size={18} />,
+        welcome: "नमस्ते! Which seat would you like to book today?"
+      }
+    };
+    return configs[userRole] || configs.student;
+  };
+
+  const config = getRoleConfig();
 
   // --- 1. VOICE OUTPUT (TTS) ---
   const speakResponse = (text) => {
     if (!('speechSynthesis' in window) || isMuted) return;
-    
     window.speechSynthesis.cancel();
     
     const isHindi = /[\u0900-\u097F]/.test(text); 
@@ -30,10 +65,9 @@ const AIChatWidget = () => {
       utterance.lang = 'en-IN';
     }
 
-    utterance.rate = 1.1;
+    utterance.rate = 1.0; // Slightly slower for better clarity
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
-    
     window.speechSynthesis.speak(utterance);
   };
 
@@ -56,13 +90,14 @@ const AIChatWidget = () => {
 
     recognition.onstart = () => {
       setIsListening(true);
-      stopSpeaking(); // Stop AI if user starts talking
+      stopSpeaking(); 
     };
     
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
+      // Auto-submit if needed: askAI(transcript);
     };
     
     recognition.onerror = () => setIsListening(false);
@@ -71,14 +106,12 @@ const AIChatWidget = () => {
     recognition.start();
   };
 
-  // Initialization: Ensure voices are loaded into the browser memory
   useEffect(() => {
     const loadVoices = () => window.speechSynthesis.getVoices();
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  // Speak AI responses automatically when loading finishes
   useEffect(() => {
     if (!loading && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
@@ -101,19 +134,21 @@ const AIChatWidget = () => {
   };
 
   return (
-    <div className="ai-widget-wrapper">
+    <div className={`ai-widget-wrapper role-${role?.toLowerCase()}`}>
       {isOpen && (
         <div className="ai-phone-window">
-          <div className="ai-phone-header">
+          {/* Header color changes based on role */}
+          <div className="ai-phone-header" style={{ backgroundColor: config.color }}>
             <div className="header-info">
               <div className="online-indicator"></div>
-              <span>KRMU Fleet Assistant</span>
+              <span className="flex items-center gap-2">
+                {config.icon} {config.label}
+              </span>
             </div>
             <div className="header-actions">
-               {/* Stop button appears only when AI is talking */}
                {isSpeaking && (
-                 <button onClick={stopSpeaking} className="stop-btn" title="Stop AI Voice">
-                   <Square size={16} fill="white" />
+                 <button onClick={stopSpeaking} className="stop-btn pulse">
+                   <Square size={14} fill="white" />
                  </button>
                )}
                <button onClick={() => setIsMuted(!isMuted)} className="icon-btn">
@@ -126,13 +161,17 @@ const AIChatWidget = () => {
           <div className="ai-messages-container">
             {messages.length === 0 && (
               <div className="welcome-screen">
-                <Bot size={40} />
-                <p>नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?</p>
+                <div className="bot-icon-wrapper" style={{ color: config.color }}>
+                   {config.icon}
+                </div>
+                <p>{config.welcome}</p>
               </div>
             )}
             {messages.map((m, i) => (
               <div key={i} className={`message-wrapper ${m.role}`}>
-                <div className="avatar">{m.role === 'ai' ? <Bot size={16} /> : <User size={16} />}</div>
+                <div className="avatar" style={{ backgroundColor: m.role === 'ai' ? config.color : '#666' }}>
+                  {m.role === 'ai' ? config.icon : <User size={14} />}
+                </div>
                 <div className="ai-bubble">{m.text}</div>
               </div>
             ))}
@@ -151,6 +190,7 @@ const AIChatWidget = () => {
               type="button" 
               onClick={startListening}
               className={`mic-btn ${isListening ? 'active-mic' : ''}`}
+              style={{ color: isListening ? '#fff' : config.color }}
             >
               <Mic size={20} />
             </button>
@@ -161,14 +201,19 @@ const AIChatWidget = () => {
               placeholder="Speak or type..."
               disabled={loading}
             />
-            <button type="submit" disabled={loading || !input.trim()}>
+            <button type="submit" disabled={loading || !input.trim()} style={{ color: config.color }}>
               <Send size={18}/>
             </button>
           </form>
         </div>
       )}
 
-      <button className={`ai-fab-button ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(!isOpen)}>
+      {/* FAB Button color matches role */}
+      <button 
+        className={`ai-fab-button ${isOpen ? 'active' : ''}`} 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ backgroundColor: config.color }}
+      >
         {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
       </button>
     </div>

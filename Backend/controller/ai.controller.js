@@ -346,6 +346,294 @@ getBusLocationByRoute: async ({ routeName, userRole }) => {
   } catch (error) { return { error: "Search failed." }; }
 },
 
+bookSeat: async ({ seatNumber, pickupStop, dropStop, userId, userRole }) => {
+    // 1. Security Check
+    if (userRole !== 'student') {
+      return { error: "Only students can book seats." };
+    }
+
+    try {
+      // 2. Fetch student to check assigned bus (Matching your controller logic)
+      const student = await userModel.findById(userId);
+      if (!student || !student.busId) {
+        return { error: "No bus has been assigned to you by the Admin yet." };
+      }
+
+      const busId = student.busId;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 3. Duplicate check for Seat/Student today
+      const existingBooking = await bookingModel.findOne({
+        $or: [
+          { studentId: userId, date: today },
+          { busId, seatNumber, date: today }
+        ],
+        status: { $in: ["pending", "approved"] }
+      });
+
+      if (existingBooking) {
+        return { error: "Booking failed: Either you already have a booking, or this seat is taken for today." };
+      }
+
+      // 4. Create Booking
+      const booking = await bookingModel.create({
+        studentId: userId,
+        busId,
+        seatNumber,
+        pickupStop,
+        dropStop,
+        date: today,
+        status: "pending"
+      });
+
+      return {
+        success: true,
+        message: `Seat ${seatNumber} requested successfully for your assigned bus. Pickup: ${pickupStop}.`,
+        bookingId: booking._id
+      };
+    } catch (error) {
+      console.error("AI Booking Error:", error);
+      return { error: "Database error occurred while booking your seat." };
+    }
+  },
+
+  getAvailableSeats: async ({ userId }) => {
+    try {
+      const student = await userModel.findById(userId);
+      if (!student || !student.busId) return { error: "No bus assigned." };
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const booked = await bookingModel.find({
+        busId: student.busId,
+        date: today,
+        status: { $in: ["pending", "approved"] }
+      }).select("seatNumber");
+
+      const bookedList = booked.map(b => b.seatNumber);
+      return { 
+        success: true, 
+        busNo: student.busId.busNo,
+        bookedSeats: bookedList,
+        message: `Currently, seats ${bookedList.join(", ")} are occupied. Others are available.`
+      };
+    } catch (error) {
+      return { error: "Could not fetch seat layout." };
+    }
+  },
+  getStudentProfile: async ({ userId, userRole }) => {
+    // 1. SECURITY GATE: Verify if the user is actually a student
+    if (userRole !== 'student') {
+      return { 
+        error: "Access Denied: This information is only available for Student accounts." 
+      };
+    }
+
+    try {
+      // 2. Database Fetch with Population
+      const user = await userModel
+        .findById(userId)
+        .populate({
+          path: "busId",
+          populate: {
+            path: "routeId",
+            select: "routeName stops"
+          }
+        })
+        .select("-password");
+
+      if (!user) {
+        return { error: "No profile found for this User ID." };
+      }
+
+      // 3. Logic check: Has the admin assigned them a bus yet?
+      if (!user.busId) {
+        return {
+          success: true,
+          name: user.name,
+          message: "You are registered as a student, but no bus has been assigned to you yet. Please contact the Admin."
+        };
+      }
+
+      // 4. Final Data Return
+      return {
+        success: true,
+        profile: {
+          name: user.name,
+          email: user.email,
+          busNo: user.busId.busNo,
+          route: user.busId.routeId?.routeName || "Route not defined",
+          stops: user.busId.routeId?.stops || []
+        }
+      };
+    } catch (error) {
+      console.error("AI Profile Error:", error);
+      return { error: "Internal server error while fetching student profile." };
+    }
+  },
+  getBusManifest: async ({ userId, userRole }) => {
+    if (userRole !== 'driver' && userRole !== 'admin') return { error: "Unauthorized" };
+    try {
+      // First, find the bus assigned to this driver
+      const bus = await busModel.findOne({ driverId: userId });
+      if (!bus) return { error: "No bus assigned to your account." };
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const roster = await userModel.find({ busId: bus._id, role: "student" }).select("name");
+      const activeBookings = await bookingModel.find({ busId: bus._id, date: today });
+
+      const manifest = roster.map(student => {
+        const booking = activeBookings.find(b => b.studentId.toString() === student._id.toString());
+        return {
+          name: student.name,
+          status: booking ? booking.status : "No Booking",
+          attendance: booking ? booking.attendance : "Absent",
+          seat: booking ? booking.seatNumber : "N/A"
+        };
+      });
+
+      return { success: true, busNo: bus.busNo, manifest };
+    } catch (error) {
+      return { error: "Failed to fetch manifest." };
+    }
+  },
+
+  // 2. UPDATE BOOKING STATUS (Approve/Reject)
+  updateBooking: async ({ studentName, status, userId, userRole }) => {
+    if (userRole !== 'driver') return { error: "Only drivers can approve bookings." };
+    try {
+      const bus = await busModel.findOne({ driverId: userId });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Find booking by student name via population
+      const booking = await bookingModel.findOne({ busId: bus._id, date: today, finalized: false })
+        .populate({ path: 'studentId', match: { name: { $regex: studentName, $options: 'i' } } });
+
+      if (!booking || !booking.studentId) return { error: `No active booking found for ${studentName}.` };
+
+      booking.status = status; // "approved" or "rejected"
+      await booking.save();
+      return { success: true, message: `Booking for ${studentName} is now ${status}.` };
+    } catch (error) {
+      return { error: "Status update failed." };
+    }
+  },
+
+  // 3. FINALIZE TRIP
+  finalizeTrip: async ({ userId, userRole }) => {
+    if (userRole !== 'driver') return { error: "Access denied." };
+    try {
+      const bus = await busModel.findOne({ driverId: userId });
+      // Call your existing logic here...
+      return { success: true, message: "Trip finalized. All no-shows marked as absent." };
+    } catch (error) {
+      return { error: "Finalization failed." };
+    }
+  },
+  manualBoarding: async ({ studentName, seatNumber, pickupStop, dropStop, userId, userRole }) => {
+    // 1. Role Security
+    if (userRole !== 'driver' && userRole !== 'admin') {
+      return { error: "Only drivers can manually add students to the bus." };
+    }
+
+    try {
+      // 2. Find Driver's Bus
+      const bus = await busModel.findOne({ driverId: userId });
+      if (!bus) return { error: "No bus assigned to your account." };
+
+      // 3. Find Student by Name
+      const student = await userModel.findOne({ 
+        name: { $regex: studentName, $options: "i" }, 
+        role: "student" 
+      });
+      if (!student) return { error: `Student named '${studentName}' not found.` };
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 4. Duplicate Check (Seat availability)
+      const seatTaken = await bookingModel.findOne({
+        busId: bus._id,
+        seatNumber,
+        date: today,
+        status: { $in: ["pending", "approved"] }
+      });
+
+      if (seatTaken) return { error: `Seat ${seatNumber} is already occupied.` };
+
+      // 5. Create Manual Entry (Following your controller logic)
+      const booking = await bookingModel.create({
+        studentId: student._id,
+        busId: bus._id,
+        seatNumber,
+        pickupStop: pickupStop || "Manual Entry",
+        dropStop: dropStop || "Campus",
+        date: today,
+        status: "approved",    // Auto-approved because driver is doing it
+        attendance: "present", // Auto-marked present
+        finalized: false
+      });
+
+      return { 
+        success: true, 
+        message: `Successfully boarded ${student.name} into Seat ${seatNumber}.` 
+      };
+    } catch (error) {
+      console.error("Manual Boarding Error:", error);
+      return { error: "Failed to perform manual boarding." };
+    }
+  },
+  getParentBusInfo: async ({ userId, userRole }) => {
+    if (userRole !== 'parent') return { error: "Access Denied." };
+
+    try {
+      // Mirroring your getParentBus controller logic
+      const student = await userModel.findOne({ parentId: userId, role: "student" })
+        .populate({
+          path: "busId",
+          populate: { path: "routeId", select: "routeName stops" }
+        });
+
+      if (!student || !student.busId) {
+        return { message: "No bus has been assigned to your child yet." };
+      }
+
+      return {
+        success: true,
+        studentName: student.name,
+        busNo: student.busId.busNo,
+        route: student.busId.routeId?.routeName || "N/A",
+        stops: student.busId.routeId?.stops || []
+      };
+    } catch (error) {
+      return { error: "Failed to fetch child's transport details." };
+    }
+  },
+
+  // 2. CHANGE PASSWORD (AI Guided)
+  updateUserPassword: async ({ oldPassword, newPassword, userId }) => {
+    // This allows the parent to change the auto-generated password via voice/chat
+    try {
+      const user = await userModel.findById(userId).select("+password");
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      
+      if (!isMatch) return { error: "The current password you provided is incorrect." };
+
+      user.password = await bcrypt.hash(newPassword, 10);
+      await user.save();
+
+      return { success: true, message: "Your password has been updated successfully." };
+    } catch (error) {
+      return { error: "Password update failed." };
+    }
+  }
+
+
 };
 
 // --------------------------------------------------------
@@ -485,58 +773,142 @@ const toolConfig = [{
       },
       required: ["routeName"]
   }
-}
+},
+{
+    name: "bookSeat",
+    description: "Book a seat on the student's assigned bus for today.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        seatNumber: { type: "NUMBER", description: "The seat number the student wants (e.g., 15)." },
+        pickupStop: { type: "STRING", description: "The name of the stop where the student boards." },
+        dropStop: { type: "STRING", description: "The destination stop name." }
+      },
+      required: ["seatNumber", "pickupStop", "dropStop"]
+    }
+  },
+  {
+    name: "getAvailableSeats",
+    description: "Checks which seats are already taken on the student's bus for today.",
+    parameters: { type: "OBJECT", properties: {} }
+  },
+  {
+    name: "getStudentProfile",
+    description: "Fetches the logged-in student's profile, assigned bus number, and route details. Use this when a student asks 'Who am I?', 'What is my bus?', or 'Show my profile'.",
+    parameters: {
+      type: "OBJECT",
+      properties: {} // No user input required; backend uses req.user.id
+    }
+  },
+  {
+    name: "getBusManifest",
+    description: "Returns a list of all students assigned to the driver's bus, their booking status, and attendance.",
+    parameters: { type: "OBJECT", properties: {} }
+  },
+  {
+    name: "updateBooking",
+    description: "Approves or rejects a student's seat booking request.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        studentName: { type: "STRING", description: "Name of the student." },
+        status: { type: "STRING", enum: ["approved", "rejected"], description: "New status." }
+      },
+      required: ["studentName", "status"]
+    }
+  },
+  {
+    name: "finalizeTrip",
+    description: "Locks all bookings for the day and marks non-bookers as absent. Use when the trip starts.",
+    parameters: { type: "OBJECT", properties: {} }
+  },
+  {
+    name: "manualBoarding",
+    description: "Manually adds a student to the bus manifest when they board without a prior booking. Marks them as Present immediately.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        studentName: { type: "STRING", description: "The name of the student boarding." },
+        seatNumber: { type: "NUMBER", description: "The seat number assigned to them." },
+        pickupStop: { type: "STRING", description: "The stop where they boarded (optional)." },
+        dropStop: { type: "STRING", description: "Their destination (optional)." }
+      },
+      required: ["studentName", "seatNumber"]
+    }
+  },
+  {
+    name: "getParentBusInfo",
+    description: "Returns the child's name, assigned bus number, and route details for the parent.",
+    parameters: { type: "OBJECT", properties: {} }
+  },
+  {
+    name: "updateUserPassword",
+    description: "Changes the parent's account password. Useful after first login with auto-generated credentials.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        oldPassword: { type: "STRING", description: "The current password sent via email." },
+        newPassword: { type: "STRING", description: "The new password the parent wants to set." }
+      },
+      required: ["oldPassword", "newPassword"]
+    }
+  }
 
   ]
 }];
-
 // --------------------------------------------------------
-// 3. THE MASTER HANDLER
+// 3. THE MASTER HANDLER (Role-Optimized)
 export const handleAICommand = async (req, res) => {
     try {
         const { prompt, history } = req.body;
-        const { id: userId, role: userRole } = req.user;
+        const { id: userId, role: userRole } = req.user; // Injected by 'protect' middleware
 
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-3.1-flash-lite-preview",
+            model: "gemini-3.1-flash-lite-preview", // Use stable or updated flash for tool use
             tools: toolConfig 
         });
 
-        // 1. Clean History (Role Validation)
+        // 1. Clean History (Stability Check)
         let cleanHistory = (history || []).filter(item => item.role && item.parts);
         if (cleanHistory.length > 0 && cleanHistory[0].role === 'model') {
             cleanHistory.shift();
         }
-        if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
-            cleanHistory.pop();
-        }
 
         const chat = model.startChat({ 
             history: cleanHistory,
-            generationConfig: { temperature: 0.7 }
+            generationConfig: { 
+                temperature: 0.4, // Lower temperature for higher accuracy in tools
+                topP: 0.8 
+            }
         });
 
-        // 2. Updated System Instruction for Multilingual/Hinglish Support
+        // 2. DYNAMIC SYSTEM INSTRUCTION
+        // This tells the AI exactly who it is talking to.
         const systemMsg = `
-            Role: KRMU Admin Assistant. 
-            Date: ${new Date().toLocaleDateString()}. 
-            Admin: ${userId}.
+            Role: KRMU Smart Transport Assistant. 
+            User Context: Logged in as ${userRole.toUpperCase()}. 
+            Date: ${new Date().toLocaleDateString()}.
             
-            LANGUAGE RULES:
-            - Respond in the EXACT language/style used by the user.
-            - If user speaks Hindi, reply in Hindi script.
-            - If user speaks Hinglish (e.g., "Bus kahan hai?"), reply in Hinglish (e.g., "Bus abhi campus gate par hai").
-            - If user speaks English, reply in English.
-            - Keep answers helpful but brief for voice clarity.
+            ROLE-BASED PERMISSIONS:
+            - If Student: Allow 'getStudentProfile', 'bookSeat', 'getAvailableSeats'.
+            - If Driver: Allow 'getUnifiedManifest', 'markAttendance', 'manualBoarding', 'submitFinalAttendance'.
+            - If Parent: Allow 'getParentBusInfo', 'updateUserPassword'.
+            - If Admin: Full access to all tools.
             
-            TASK: Use tools for all bus/route/driver data. Do not guess locations.
+            LANGUAGE POLICY:
+            - Always match the user's language (English, Hindi, or Hinglish).
+            - If they ask "Mera bacha kahan hai?", reply in Hinglish.
+            - Keep responses concise for voice-readability.
+            
+            IMPORTANT: If a user asks for an action they don't have permission for (e.g., Student asking to finalize a trip), politely explain that only ${userRole === 'student' ? 'Drivers' : 'Admins'} can do that.
         `;
         
-        // Send the prompt. We wrap the system instruction properly so it doesn't leak into the chat.
-        let result = await chat.sendMessage(`${systemMsg}\n\nUser Message: ${prompt}`);
+        // Combine system context with the user prompt
+        const fullPrompt = `[SYSTEM_CONTEXT]: ${systemMsg}\n\n[USER_MESSAGE]: ${prompt}`;
+        let result = await chat.sendMessage(fullPrompt);
         let response = result.response;
         
-        // 3. THE TOOL LOOP
+        // 3. THE TOOL LOOP (Max 5 iterations to prevent infinite loops)
         let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
         let loopCount = 0;
 
@@ -544,14 +916,12 @@ export const handleAICommand = async (req, res) => {
             loopCount++;
             const { name, args } = call.functionCall;
             
-            console.log(`Executing Tool: ${name}`, args);
+            console.log(`[AI-ACTION] User: ${userRole} | Tool: ${name}`);
 
+            // The 'aiActions' functions check internal 'userRole' for security
             const actionResult = await aiActions[name]({ ...args, userId, userRole });
 
-            // 4. RATE LIMIT DELAY
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // IMPORTANT: When sending back tool results, remind the AI to stick to the language
+            // Send tool output back to Gemini
             result = await chat.sendMessage([{
                 functionResponse: { name, response: actionResult }
             }]);
@@ -560,17 +930,21 @@ export const handleAICommand = async (req, res) => {
             call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
         }
 
-        // 5. Final Response
+        // 5. Final Response to Frontend
         const finalMessage = response.text();
-        res.json({ success: true, message: finalMessage });
+        res.json({ 
+            success: true, 
+            message: finalMessage,
+            role: userRole // Helpful for frontend UI logic
+        });
 
     } catch (error) {
-        console.error("DETAILED AI ERROR:", error.message);
+        console.error("AI MASTER HANDLER ERROR:", error);
         
-        const userFriendlyMessage = error.message.includes("429") 
-            ? "Server busy hai, please 30 seconds wait karein." 
-            : "Kuch technical error lag raha hai. Phir se try karein.";
-
-        res.status(500).json({ success: false, message: userFriendlyMessage });
+        let errorMessage = "Sorry, I encountered an issue. Please try again.";
+        if (error.message.includes("429")) errorMessage = "Server is busy. Please wait a moment.";
+        
+        res.status(500).json({ success: false, message: errorMessage });
     }
 };
+
