@@ -34,7 +34,7 @@ const AIChatWidget = () => {
 
   const config = getRoleConfig();
 
-  // --- 1. VOICE OUTPUT (TTS) ---
+  // --- 1. VOICE OUTPUT (TTS) - FEMALE & SLOW FIX ---
   const speakResponse = (text) => {
     if (!('speechSynthesis' in window) || isMuted) return;
     window.speechSynthesis.cancel();
@@ -49,16 +49,25 @@ const AIChatWidget = () => {
     const isHindi = /[\u0900-\u097F]/.test(text); 
 
     if (isHindi) {
-      utterance.voice = voices.find(v => v.lang.includes('hi-IN')) || voices[0];
+      // Look for Hindi female voices
+      const hindiFemale = voices.find(v => v.lang.includes('hi-IN') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Aria')));
+      utterance.voice = hindiFemale || voices.find(v => v.lang.includes('hi-IN')) || voices[0];
       utterance.lang = 'hi-IN';
     } else {
-      // Use en-IN for a natural Indian-English voice output
-      utterance.voice = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en-GB')) || voices[0];
+      // Look for English high-quality female voices (Zira, Samantha, Google Female)
+      const englishFemale = voices.find(v => 
+        v.lang.includes('en') && 
+        (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Aria'))
+      );
+      utterance.voice = englishFemale || voices[0];
       utterance.lang = 'en-IN';
     }
 
-    utterance.rate = 1.0; 
-    utterance.pitch = 1.05; 
+    // SPEED & CLARITY SETTINGS
+    utterance.rate = 0.85;  // Slowed down for clarity (1.0 is default)
+    utterance.pitch = 1.1;  // Slightly higher pitch for a clearer female tone
+    utterance.volume = 1.0; 
+
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -71,22 +80,18 @@ const AIChatWidget = () => {
     setIsSpeaking(false);
   };
 
-  // --- 2. VOICE INPUT (STT) WITH LANGUAGE FIX ---
+  // --- 2. VOICE INPUT (STT) - ENGLISH TRANSCRIPTION FIX ---
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition not supported in this browser. Please use Chrome.");
+      alert("Browser not supported. Please use Chrome.");
       return;
     }
 
     const recognition = new SpeechRecognition();
     
-    /** * FIX: Changed from 'hi-IN' to 'en-IN'.
-     * This allows the browser to recognize English words correctly while 
-     * still being optimized for Indian accents.
-     */
+    // Using 'en-IN' ensures English is written correctly but still understands Indian accents
     recognition.lang = 'en-IN'; 
-    
     recognition.interimResults = false;
 
     recognition.onstart = () => {
@@ -99,7 +104,6 @@ const AIChatWidget = () => {
       setInput(transcript);
       setIsListening(false);
       
-      // AUTO-SUBMIT
       if (transcript.trim()) {
         askAI(transcript);
         setInput(""); 
@@ -152,7 +156,7 @@ const AIChatWidget = () => {
                {isSpeaking && (
                  <button onClick={stopSpeaking} className="speaker-wave-btn">
                    <Square size={12} fill="currentColor" />
-                   <span className="text-[10px] font-bold uppercase tracking-wider">Stop</span>
+                   <span className="text-[10px] font-bold">STOP</span>
                  </button>
                )}
                <button onClick={() => setIsMuted(!isMuted)} className="util-btn">
@@ -170,7 +174,7 @@ const AIChatWidget = () => {
                 <div className="icon-circle" style={{ backgroundColor: config.color + '15', color: config.color }}>
                    {config.icon}
                 </div>
-                <h3>How can I help, {user?.name?.split(' ')[0] || 'User'}?</h3>
+                <h3>How can I help, {user?.name?.split(' ')[0] || 'Student'}?</h3>
                 <p>{config.welcome}</p>
               </div>
             )}
