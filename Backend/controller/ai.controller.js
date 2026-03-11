@@ -631,7 +631,112 @@ bookSeat: async ({ seatNumber, pickupStop, dropStop, userId, userRole }) => {
     } catch (error) {
       return { error: "Password update failed." };
     }
+  },
+
+  // Inside your aiActions object
+markStudentAttendance: async ({ studentName, status, userId, userRole }) => {
+  // 1. Security Check
+  if (userRole !== 'driver' && userRole !== 'admin') {
+    return { error: "Permission denied. Only drivers can mark attendance." };
   }
+
+  try {
+    // 2. Find the Driver's Bus
+    const bus = await busModel.findOne({ driverId: userId });
+    if (!bus) return { error: "You don't have a bus assigned to your account." };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 3. Find the Booking for this student on this bus for today
+    // We use a regex search for the student's name (populated from userModel)
+    const booking = await bookingModel.findOne({
+      busId: bus._id,
+      date: today,
+      finalized: false // Ensure trip isn't locked
+    }).populate({
+      path: 'studentId',
+      match: { name: { $regex: studentName, $options: 'i' } }
+    });
+
+    if (!booking || !booking.studentId) {
+      return { error: `I couldn't find an active booking for "${studentName}" on your bus today.` };
+    }
+
+    // 4. Update and Save (Mirroring your original controller)
+    booking.attendance = status.toLowerCase(); // "present" or "absent"
+    await booking.save();
+
+    return { 
+      success: true, 
+      message: `Theek hai, ${booking.studentId.name} ko ${status} mark kar diya hai.` 
+    };
+
+  } catch (error) {
+    console.error("AI Attendance Error:", error);
+    return { error: "Database error occurred while updating attendance." };
+  }
+},
+// Inside your aiActions object in gemini.controller.js
+getLiveBusLocation: async ({ busNo, routeName, userId, userRole }) => {
+  try {
+      let targetBus;
+
+      // 1. Search Logic (Role-Based)
+      if (userRole === 'admin' && (busNo || routeName)) {
+          const query = busNo 
+              ? { busNo: { $regex: busNo, $options: "i" } } 
+              : { routeId: await routeModel.findOne({ routeName: { $regex: routeName, $options: "i" } }).then(r => r?._id) };
+          
+          targetBus = await busModel.findOne(query).populate('routeId');
+      } else {
+          const user = await userModel.findById(userId).populate('busId');
+          targetBus = (userRole === 'parent') 
+              ? (await userModel.findOne({ parentId: userId }).populate('busId'))?.busId 
+              : user?.busId;
+      }
+
+      if (!targetBus || !targetBus.lastLocation?.lat) {
+          return { error: "Bus offline hai ya GPS signal nahi mil raha." };
+      }
+
+      // 2. Return Raw Data for Gemini to process
+      return {
+          success: true,
+          busNo: targetBus.busNo,
+          routeName: targetBus.routeId?.routeName || "Unknown Route",
+          lat: targetBus.lastLocation.lat,
+          lng: targetBus.lastLocation.lng,
+          lastSeen: targetBus.lastUpdatedAt
+      };
+  } catch (error) {
+      return { error: "Database se location fetch nahi ho payi." };
+  }
+
+},
+checkMyBooking: async ({ userId, userRole }) => {
+  if (userRole !== 'student') return { error: "This is for students only." };
+
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const booking = await bookingModel.findOne({ studentId: userId, date: today })
+      .populate("busId", "busNo");
+
+    if (!booking) return { hasBooking: false, message: "Aapne aaj ke liye koi seat book nahi ki hai." };
+
+    return {
+      hasBooking: true,
+      seatNumber: booking.seatNumber,
+      status: booking.status,
+      busNo: booking.busId?.busNo,
+      message: `Aapki seat number ${booking.seatNumber} (${booking.status}) hai.`
+    };
+  } catch (error) {
+    return { error: "Record fetch nahi ho paya." };
+  }
+}
 
 
 };
@@ -683,6 +788,11 @@ const toolConfig = [{
           },
           required: ["currentRouteName"]
       }
+  },
+  {
+    name: "checkMyBooking",
+    description: "Checks if the student has already booked a seat for today. Use when user asks 'Is my seat booked?' or 'Mera status kya hai?'.",
+    parameters: { type: "OBJECT", properties: {} }
   },
   {
       name: "deleteRoute",
@@ -852,6 +962,36 @@ const toolConfig = [{
       },
       required: ["oldPassword", "newPassword"]
     }
+  },
+  {
+    name: "markStudentAttendance",
+    description: "Allows the driver to mark a student as present or absent using their name. Use this when the driver says 'Mark Ved present' or 'Mark Aman as absent'.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        studentName: { 
+          type: "STRING", 
+          description: "The name of the student (e.g., 'Ved' or 'Aman')." 
+        },
+        status: { 
+          type: "STRING", 
+          enum: ["present", "absent"], 
+          description: "The attendance status to set." 
+        }
+      },
+      required: ["studentName", "status"]
+    }
+  },
+  {
+    name: "getLiveBusLocation",
+    description: "Fetches live GPS coordinates. Admins can search by busNo or routeName. Students/Parents get their bus location automatically.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        busNo: { type: "STRING", description: "The bus registration number." },
+        routeName: { type: "STRING", description: "The name of the transport route." }
+      }
+    }
   }
 
   ]
@@ -901,6 +1041,12 @@ export const handleAICommand = async (req, res) => {
           
           GENERAL CHAT:
           - If the user just wants to chat (e.g., "How are you?" or "Suggest a song"), respond like a human friend. Don't say "I am a bus assistant."
+          - You are the KRMU Transport Assistant.
+    - IMPORTANT: When you receive latitude and longitude from a tool, use your internal knowledge to identify the landmark or area.
+    - DO NOT show coordinates to the user.
+    - Convert coordinates like (28.4595, 77.0266) into names like "near Cyber Hub, Gurugram" or "on Rajiv Chowk".
+    - Tone: Friendly and helpful. Use English naturally and Hinglish when user starts talking in Hinglish.
+    - Example: "Aapki bus abhi IFFCO Chowk ke pass hai, bas 10 minute mein pahunch jayegi."
       `;
       
       // Use a cleaner prompt structure
