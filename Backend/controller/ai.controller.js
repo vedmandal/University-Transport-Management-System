@@ -859,92 +859,87 @@ const toolConfig = [{
 // --------------------------------------------------------
 // 3. THE MASTER HANDLER (Role-Optimized)
 export const handleAICommand = async (req, res) => {
-    try {
-        const { prompt, history } = req.body;
-        const { id: userId, role: userRole } = req.user; // Injected by 'protect' middleware
+  try {
+      const { prompt, history } = req.body;
+      const { id: userId, role: userRole, name: userName } = req.user; 
 
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-3.1-flash-lite-preview", // Use stable or updated flash for tool use
-            tools: toolConfig 
-        });
+      // 1. INCREASE TEMPERATURE FOR HUMAN VARIATION
+      // Temperature 0.8 makes the AI less "predefined" and more conversational.
+      const model = genAI.getGenerativeModel({ 
+          model: "gemini-1.5-flash", 
+          tools: toolConfig,
+          generationConfig: { 
+              temperature: 0.8, 
+              topP: 0.9,
+              topK: 40
+          }
+      });
 
-        // 1. Clean History (Stability Check)
-        let cleanHistory = (history || []).filter(item => item.role && item.parts);
-        if (cleanHistory.length > 0 && cleanHistory[0].role === 'model') {
-            cleanHistory.shift();
-        }
+      const chat = model.startChat({ history });
 
-        const chat = model.startChat({ 
-            history: cleanHistory,
-            generationConfig: { 
-                temperature: 0.4, // Lower temperature for higher accuracy in tools
-                topP: 0.8 
-            }
-        });
+      // 2. THE "HUMAN" SYSTEM INSTRUCTION
+      // We tell Gemini to act like a helpful peer, not a database interface.
+      const systemMsg = `
+          PERSONALITY:
+          - You are the KRMU Smart Transport Assistant, a friendly and helpful peer. 
+          - DO NOT sound like a robot. Avoid phrases like "I have processed your request."
+          - Use Hinglish naturally (e.g., "Haanji, seat book ho gayi hai" instead of "Your seat is reserved").
+          - Be empathetic. If a user is late or a bus is delayed, say "Oh no, tension mat lijiye."
+          
+          VOICE-FIRST DESIGN:
+          - Keep responses under 2-3 short sentences. 
+          - DO NOT use bullet points, bold text (**), or markdown. They sound robotic when read aloud.
+          
+          USER CONTEXT:
+          - You are talking to ${userName || 'User'} who is a ${userRole.toUpperCase()}.
+          
+          PERMISSIONS & TOOLS:
+          - Students: bookSeat, getAvailableSeats, getStudentProfile.
+          - Drivers: getUnifiedManifest, markAttendance, manualBoarding, submitFinalAttendance.
+          - Parents: getParentBusInfo.
+          - If they ask for something out of their role, say: "Sorry, ye feature sirf ${userRole === 'student' ? 'Drivers' : 'Admins'} ke liye hai."
+          
+          GENERAL CHAT:
+          - If the user just wants to chat (e.g., "How are you?" or "Suggest a song"), respond like a human friend. Don't say "I am a bus assistant."
+      `;
+      
+      // Use a cleaner prompt structure
+      const fullPrompt = `${systemMsg}\n\nUser says: ${prompt}`;
+      let result = await chat.sendMessage(fullPrompt);
+      let response = result.response;
+      
+      // 3. THE TOOL LOOP (Execution)
+      let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
+      let loopCount = 0;
 
-        // 2. DYNAMIC SYSTEM INSTRUCTION
-        // This tells the AI exactly who it is talking to.
-        const systemMsg = `
-            Role: KRMU Smart Transport Assistant. 
-            User Context: Logged in as ${userRole.toUpperCase()}. 
-            Date: ${new Date().toLocaleDateString()}.
-            
-            ROLE-BASED PERMISSIONS:
-            - If Student: Allow 'getStudentProfile', 'bookSeat', 'getAvailableSeats'.
-            - If Driver: Allow 'getUnifiedManifest', 'markAttendance', 'manualBoarding', 'submitFinalAttendance'.
-            - If Parent: Allow 'getParentBusInfo', 'updateUserPassword'.
-            - If Admin: Full access to all tools.
-            
-            LANGUAGE POLICY:
-            - Always match the user's language (English, Hindi, or Hinglish).
-            - If they ask "Mera bacha kahan hai?", reply in Hinglish.
-            - Keep responses concise for voice-readability.
-            
-            IMPORTANT: If a user asks for an action they don't have permission for (e.g., Student asking to finalize a trip), politely explain that only ${userRole === 'student' ? 'Drivers' : 'Admins'} can do that.
-        `;
-        
-        // Combine system context with the user prompt
-        const fullPrompt = `[SYSTEM_CONTEXT]: ${systemMsg}\n\n[USER_MESSAGE]: ${prompt}`;
-        let result = await chat.sendMessage(fullPrompt);
-        let response = result.response;
-        
-        // 3. THE TOOL LOOP (Max 5 iterations to prevent infinite loops)
-        let call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
-        let loopCount = 0;
+      while (call && loopCount < 5) {
+          loopCount++;
+          const { name, args } = call.functionCall;
+          
+          // Execute the backend action
+          const actionResult = await aiActions[name]({ ...args, userId, userRole });
 
-        while (call && loopCount < 5) {
-            loopCount++;
-            const { name, args } = call.functionCall;
-            
-            console.log(`[AI-ACTION] User: ${userRole} | Tool: ${name}`);
+          // Send tool result back but remind Gemini to stay "Human/Hinglish" in the final summary
+          result = await chat.sendMessage([{
+              functionResponse: { 
+                  name, 
+                  response: { ...actionResult, _instruction: "Now explain this to the user in friendly Hinglish." } 
+              }
+          }]);
 
-            // The 'aiActions' functions check internal 'userRole' for security
-            const actionResult = await aiActions[name]({ ...args, userId, userRole });
+          response = result.response;
+          call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
+      }
 
-            // Send tool output back to Gemini
-            result = await chat.sendMessage([{
-                functionResponse: { name, response: actionResult }
-            }]);
+      const finalMessage = response.text();
+      res.json({ 
+          success: true, 
+          message: finalMessage,
+          role: userRole 
+      });
 
-            response = result.response;
-            call = response.candidates[0]?.content?.parts?.find(p => p.functionCall);
-        }
-
-        // 5. Final Response to Frontend
-        const finalMessage = response.text();
-        res.json({ 
-            success: true, 
-            message: finalMessage,
-            role: userRole // Helpful for frontend UI logic
-        });
-
-    } catch (error) {
-        console.error("AI MASTER HANDLER ERROR:", error);
-        
-        let errorMessage = "Sorry, I encountered an issue. Please try again.";
-        if (error.message.includes("429")) errorMessage = "Server is busy. Please wait a moment.";
-        
-        res.status(500).json({ success: false, message: errorMessage });
-    }
+  } catch (error) {
+      console.error("AI MASTER HANDLER ERROR:", error);
+      res.status(500).json({ success: false, message: "Server busy, try again!" });
+  }
 };
-

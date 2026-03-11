@@ -53,7 +53,7 @@ const AIChatWidget = () => {
 
   const config = getRoleConfig();
 
-  // --- 1. VOICE OUTPUT (TTS) WITH ROBUST LOADING ---
+  // --- 1. VOICE OUTPUT (TTS) ---
   const speakResponse = (text) => {
     if (!('speechSynthesis' in window) || isMuted) return;
     
@@ -61,7 +61,7 @@ const AIChatWidget = () => {
     
     const voices = window.speechSynthesis.getVoices();
     
-    // FIX: If voices aren't loaded yet, retry in 200ms
+    // Voice Loading Retry Logic
     if (voices.length === 0) {
       setTimeout(() => speakResponse(text), 200);
       return;
@@ -78,7 +78,9 @@ const AIChatWidget = () => {
       utterance.lang = 'en-IN';
     }
 
-    utterance.rate = 1.0;
+    utterance.rate = 1.0; 
+    utterance.pitch = 1.1; // Friendlier tone
+    
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -87,15 +89,17 @@ const AIChatWidget = () => {
   };
 
   const stopSpeaking = () => {
-    window.speechSynthesis.cancel();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     setIsSpeaking(false);
   };
 
-  // --- 2. VOICE INPUT (STT) ---
+  // --- 2. VOICE INPUT (STT) WITH AUTO-SUBMIT & INTERRUPTION ---
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Browser not supported. Use Chrome!");
+      alert("Browser not supported. Please use Chrome!");
       return;
     }
 
@@ -105,6 +109,7 @@ const AIChatWidget = () => {
 
     recognition.onstart = () => {
       setIsListening(true);
+      // 🛑 CRITICAL: AI stops talking immediately when user wants to speak
       stopSpeaking(); 
     };
     
@@ -112,6 +117,12 @@ const AIChatWidget = () => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
+
+      // 🚀 AUTO-SUBMIT: Triggers Gemini as soon as voice is processed
+      if (transcript.trim()) {
+        askAI(transcript);
+        setInput(""); 
+      }
     };
     
     recognition.onerror = () => setIsListening(false);
@@ -122,18 +133,14 @@ const AIChatWidget = () => {
 
   // --- 3. EFFECTS ---
 
-  // Initialization: Handle async voice loading
+  // Voice Initialization
   useEffect(() => {
-    const loadVoices = () => {
-      window.speechSynthesis.getVoices();
-    };
-
+    const loadVoices = () => window.speechSynthesis.getVoices();
     loadVoices();
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-
-    // Chrome "Wake up" call
+    // Wake-up nudge
     if ('speechSynthesis' in window) {
       const nudge = new SpeechSynthesisUtterance("");
       window.speechSynthesis.speak(nudge);
@@ -141,15 +148,16 @@ const AIChatWidget = () => {
     }
   }, []);
 
-  // Speak AI responses automatically
+  // 🚀 AUTO-SPEAK: Seamless Voice-to-Voice Loop
   useEffect(() => {
     if (!loading && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'ai') {
+      // Only speak if it's the AI and the mic isn't currently listening
+      if (lastMessage.role === 'ai' && !isMuted && !isListening) {
         speakResponse(lastMessage.text);
       }
     }
-  }, [messages, loading]);
+  }, [messages, loading, isListening]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -194,7 +202,7 @@ const AIChatWidget = () => {
                 <div className="bot-icon-wrapper" style={{ color: config.color }}>
                    {config.icon}
                 </div>
-                <p className="text-center px-4 text-gray-600">{config.welcome}</p>
+                <p className="text-center px-4 text-gray-600 font-medium">{config.welcome}</p>
               </div>
             )}
             
