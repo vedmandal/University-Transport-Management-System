@@ -866,7 +866,7 @@ export const handleAICommand = async (req, res) => {
       // 1. INCREASE TEMPERATURE FOR HUMAN VARIATION
       // Temperature 0.8 makes the AI less "predefined" and more conversational.
       const model = genAI.getGenerativeModel({ 
-          model: "gemini-1.5-flash", 
+          model: "gemini-3.1-flash-lite-preview", 
           tools: toolConfig,
           generationConfig: { 
               temperature: 0.8, 

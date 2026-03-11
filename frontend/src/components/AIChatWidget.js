@@ -3,7 +3,8 @@ import { useAI } from '../context/AIContext';
 import { AuthContext } from '../context/AuthContext';
 import { 
   MessageSquare, X, Send, Bot, User, Volume2, 
-  VolumeX, Mic, Square, ShieldCheck, Truck, Users 
+  VolumeX, Mic, Square, ShieldCheck, Truck, Users, 
+  ChevronRight, Sparkles 
 } from 'lucide-react'; 
 import './AIChatWidget.css';
 
@@ -23,30 +24,10 @@ const AIChatWidget = () => {
   const getRoleConfig = () => {
     const userRole = role?.toLowerCase() || 'student';
     const configs = {
-      admin: {
-        label: "Admin Copilot",
-        color: "#dc2626",
-        icon: <ShieldCheck size={18} />,
-        welcome: `नमस्ते Admin ${user?.name || ''}! How can I help with fleet management?`
-      },
-      driver: {
-        label: "Driver Assistant",
-        color: "#16a34a",
-        icon: <Truck size={18} />,
-        welcome: "नमस्ते! Today's manifest is ready. Ask me to see your passenger list."
-      },
-      parent: {
-        label: "Parent Support",
-        color: "#ea580c",
-        icon: <Users size={18} />,
-        welcome: "नमस्ते! I can help you track your child's bus or change your password."
-      },
-      student: {
-        label: "Student Helper",
-        color: "#2563eb",
-        icon: <Bot size={18} />,
-        welcome: "नमस्ते! Which seat would you like to book today?"
-      }
+      admin: { label: "Admin Copilot", color: "#6366f1", icon: <ShieldCheck size={18} />, welcome: "Fleet Status is normal. How can I assist with management today?" },
+      driver: { label: "Driver Assistant", color: "#10b981", icon: <Truck size={18} />, welcome: "Route 102 is active. Need passenger details or manifest info?" },
+      parent: { label: "Parent Support", color: "#f59e0b", icon: <Users size={18} />, welcome: "Tracking active. Ask me for your child's bus location." },
+      student: { label: "Student Helper", color: "#6366f1", icon: <Sparkles size={18} />, welcome: "Hi! Ready to book a seat or check your bus schedule?" }
     };
     return configs[userRole] || configs.student;
   };
@@ -56,12 +37,9 @@ const AIChatWidget = () => {
   // --- 1. VOICE OUTPUT (TTS) ---
   const speakResponse = (text) => {
     if (!('speechSynthesis' in window) || isMuted) return;
-    
     window.speechSynthesis.cancel();
     
     const voices = window.speechSynthesis.getVoices();
-    
-    // Voice Loading Retry Logic
     if (voices.length === 0) {
       setTimeout(() => speakResponse(text), 200);
       return;
@@ -71,7 +49,7 @@ const AIChatWidget = () => {
     const isHindi = /[\u0900-\u097F]/.test(text); 
 
     if (isHindi) {
-      utterance.voice = voices.find(v => v.lang.includes('hi-IN')) || voices.find(v => v.lang.includes('hi')) || voices[0];
+      utterance.voice = voices.find(v => v.lang.includes('hi-IN')) || voices[0];
       utterance.lang = 'hi-IN';
     } else {
       utterance.voice = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en-GB')) || voices[0];
@@ -79,8 +57,7 @@ const AIChatWidget = () => {
     }
 
     utterance.rate = 1.0; 
-    utterance.pitch = 1.1; // Friendlier tone
-    
+    utterance.pitch = 1.05; 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -89,19 +66,14 @@ const AIChatWidget = () => {
   };
 
   const stopSpeaking = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
 
-  // --- 2. VOICE INPUT (STT) WITH AUTO-SUBMIT & INTERRUPTION ---
+  // --- 2. VOICE INPUT (STT) WITH AUTO-SUBMIT ---
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Browser not supported. Please use Chrome!");
-      return;
-    }
+    if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'hi-IN'; 
@@ -109,7 +81,6 @@ const AIChatWidget = () => {
 
     recognition.onstart = () => {
       setIsListening(true);
-      // 🛑 CRITICAL: AI stops talking immediately when user wants to speak
       stopSpeaking(); 
     };
     
@@ -117,8 +88,6 @@ const AIChatWidget = () => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
-
-      // 🚀 AUTO-SUBMIT: Triggers Gemini as soon as voice is processed
       if (transcript.trim()) {
         askAI(transcript);
         setInput(""); 
@@ -127,39 +96,25 @@ const AIChatWidget = () => {
     
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
-
     recognition.start();
   };
 
   // --- 3. EFFECTS ---
-
-  // Voice Initialization
   useEffect(() => {
     const loadVoices = () => window.speechSynthesis.getVoices();
     loadVoices();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-    // Wake-up nudge
-    if ('speechSynthesis' in window) {
-      const nudge = new SpeechSynthesisUtterance("");
-      window.speechSynthesis.speak(nudge);
-      window.speechSynthesis.cancel();
-    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  // 🚀 AUTO-SPEAK: Seamless Voice-to-Voice Loop
   useEffect(() => {
     if (!loading && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      // Only speak if it's the AI and the mic isn't currently listening
       if (lastMessage.role === 'ai' && !isMuted && !isListening) {
         speakResponse(lastMessage.text);
       }
     }
   }, [messages, loading, isListening]);
 
-  // Scroll to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -173,97 +128,86 @@ const AIChatWidget = () => {
   };
 
   return (
-    <div className={`ai-widget-wrapper role-${role?.toLowerCase()}`}>
+    <div className="ai-dashboard-widget">
       {isOpen && (
-        <div className="ai-phone-window shadow-2xl">
-          <div className="ai-phone-header" style={{ backgroundColor: config.color }}>
-            <div className="header-info">
-              <div className="online-indicator"></div>
-              <span className="flex items-center gap-2 font-medium">
-                {config.icon} {config.label}
-              </span>
+        <div className="chat-panel shadow-dashboard">
+          <div className="chat-header">
+            <div className="header-status">
+              <div className="status-dot"></div>
+              <span className="role-label">{config.label}</span>
             </div>
             <div className="header-actions">
                {isSpeaking && (
-                 <button onClick={stopSpeaking} className="stop-btn pulse-animation">
-                   <Square size={14} fill="white" />
+                 <button onClick={stopSpeaking} className="speaker-wave-btn">
+                   <div className="wave-icon"></div>
+                   <Square size={12} fill="currentColor" />
                  </button>
                )}
-               <button onClick={() => setIsMuted(!isMuted)} className="icon-btn">
+               <button onClick={() => setIsMuted(!isMuted)} className="util-btn">
                  {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                </button>
-               <X size={20} onClick={() => setIsOpen(false)} className="close-icon cursor-pointer" />
+               <button onClick={() => setIsOpen(false)} className="util-btn">
+                 <X size={18} />
+               </button>
             </div>
           </div>
           
-          <div className="ai-messages-container">
+          <div className="chat-body">
             {messages.length === 0 && (
-              <div className="welcome-screen">
-                <div className="bot-icon-wrapper" style={{ color: config.color }}>
+              <div className="empty-state">
+                <div className="icon-circle" style={{ backgroundColor: config.color + '15', color: config.color }}>
                    {config.icon}
                 </div>
-                <p className="text-center px-4 text-gray-600 font-medium">{config.welcome}</p>
+                <h3>How can I help, {user?.name?.split(' ')[0] || 'Student'}?</h3>
+                <p>{config.welcome}</p>
               </div>
             )}
             
             {messages.map((m, i) => (
-              <div key={i} className={`message-wrapper ${m.role}`}>
-                <div 
-                  className="avatar shadow-sm" 
-                  style={{ backgroundColor: m.role === 'ai' ? config.color : '#4b5563' }}
-                >
-                  {m.role === 'ai' ? config.icon : <User size={14} />}
+              <div key={i} className={`msg-row ${m.role}`}>
+                <div className="msg-content">
+                  <div className="msg-bubble">{m.text}</div>
                 </div>
-                <div className="ai-bubble shadow-sm">{m.text}</div>
               </div>
             ))}
 
             {loading && (
-              <div className="message-wrapper ai">
-                <div className="ai-bubble typing">
-                  <span className="dot"></span><span className="dot"></span><span className="dot"></span>
+              <div className="msg-row ai">
+                <div className="typing-indicator">
+                  <span></span><span></span><span></span>
                 </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
 
-          <form className="ai-input-area" onSubmit={handleSend}>
+          <form className="chat-footer" onSubmit={handleSend}>
             <button 
               type="button" 
               onClick={startListening}
-              className={`mic-btn ${isListening ? 'active-mic' : ''}`}
-              style={{ color: isListening ? '#fff' : config.color }}
+              className={`action-btn mic ${isListening ? 'active' : ''}`}
             >
               <Mic size={20} />
             </button>
-
             <input 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Speak or type..."
+              placeholder="Ask anything..."
               disabled={loading}
-              className="outline-none"
             />
-            
-            <button 
-              type="submit" 
-              disabled={loading || !input.trim()} 
-              style={{ color: config.color }}
-              className="send-btn"
-            >
-              <Send size={18}/>
+            <button type="submit" className="action-btn send" disabled={loading || !input.trim()}>
+              <ChevronRight size={20}/>
             </button>
           </form>
         </div>
       )}
 
       <button 
-        className={`ai-fab-button shadow-lg ${isOpen ? 'active' : ''}`} 
+        className={`fab-trigger ${isOpen ? 'active' : ''}`} 
         onClick={() => setIsOpen(!isOpen)}
         style={{ backgroundColor: config.color }}
       >
-        {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
       </button>
     </div>
   );
