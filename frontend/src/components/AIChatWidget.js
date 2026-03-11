@@ -52,6 +52,7 @@ const AIChatWidget = () => {
       utterance.voice = voices.find(v => v.lang.includes('hi-IN')) || voices[0];
       utterance.lang = 'hi-IN';
     } else {
+      // Use en-IN for a natural Indian-English voice output
       utterance.voice = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en-GB')) || voices[0];
       utterance.lang = 'en-IN';
     }
@@ -70,13 +71,22 @@ const AIChatWidget = () => {
     setIsSpeaking(false);
   };
 
-  // --- 2. VOICE INPUT (STT) WITH AUTO-SUBMIT ---
+  // --- 2. VOICE INPUT (STT) WITH LANGUAGE FIX ---
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser. Please use Chrome.");
+      return;
+    }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN'; 
+    
+    /** * FIX: Changed from 'hi-IN' to 'en-IN'.
+     * This allows the browser to recognize English words correctly while 
+     * still being optimized for Indian accents.
+     */
+    recognition.lang = 'en-IN'; 
+    
     recognition.interimResults = false;
 
     recognition.onstart = () => {
@@ -88,6 +98,8 @@ const AIChatWidget = () => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
+      
+      // AUTO-SUBMIT
       if (transcript.trim()) {
         askAI(transcript);
         setInput(""); 
@@ -139,8 +151,8 @@ const AIChatWidget = () => {
             <div className="header-actions">
                {isSpeaking && (
                  <button onClick={stopSpeaking} className="speaker-wave-btn">
-                   <div className="wave-icon"></div>
                    <Square size={12} fill="currentColor" />
+                   <span className="text-[10px] font-bold uppercase tracking-wider">Stop</span>
                  </button>
                )}
                <button onClick={() => setIsMuted(!isMuted)} className="util-btn">
@@ -158,7 +170,7 @@ const AIChatWidget = () => {
                 <div className="icon-circle" style={{ backgroundColor: config.color + '15', color: config.color }}>
                    {config.icon}
                 </div>
-                <h3>How can I help, {user?.name?.split(' ')[0] || 'Student'}?</h3>
+                <h3>How can I help, {user?.name?.split(' ')[0] || 'User'}?</h3>
                 <p>{config.welcome}</p>
               </div>
             )}
@@ -192,7 +204,7 @@ const AIChatWidget = () => {
             <input 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything..."
+              placeholder="Ask me anything..."
               disabled={loading}
             />
             <button type="submit" className="action-btn send" disabled={loading || !input.trim()}>
